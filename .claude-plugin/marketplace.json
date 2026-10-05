@@ -1,0 +1,12 @@
+{
+  "name": "personal-agents",
+  "owner": { "name": "erimhabib-work" },
+  "plugins": [
+    {
+      "name": "research-agent",
+      "source": "./plugins/research-agent",
+      "description": "Research protocol, session loop, and researcher and reviewer agents for evidence-based research projects.",
+      "version": "0.1.0"
+    }
+  ]
+}
