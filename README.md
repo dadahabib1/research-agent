@@ -18,13 +18,14 @@ A Claude Code plugin for evidence-based research projects. It provides a researc
 ```json
 {
   "extraKnownMarketplaces": {
-    "personal-agents": { "source": { "source": "github", "repo": "erimhabib-work/research-agent" } }
+    "personal-agents": { "source": { "source": "github", "repo": "dadahabib1/research-agent" } }
   },
   "enabledPlugins": { "research-agent@personal-agents": true }
 }
 ```
 
-- **Manually:** run `/plugin marketplace add erimhabib-work/research-agent`, then `/plugin install research-agent@personal-agents`.
+- **Manually:** run `/plugin marketplace add dadahabib1/research-agent`, then `/plugin install research-agent@personal-agents`.
+- **Installed from the old `erimhabib-work/research-agent` address:** run `/plugin marketplace remove personal-agents`, then the two manual commands above, and update the `repo` line in any project's `.claude/settings.json`.
 - **For claude.ai chat and Cowork:** zip `plugins/research-agent/skills/research-protocol/` and upload it as a skill.
 
 ## Use
