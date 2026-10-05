@@ -24,8 +24,8 @@ Run one research task per session. Paths come from the project's `CLAUDE.md`. If
    Done when every intake gap is answered or recorded as a labelled assumption.
 4. **Research.** Work through the prompt's steps, following protocol steps 3 to 6: frame, plan, gather, verify. Delegate long evidence-gathering to the researcher subagent. Log every query and source.
    Done when each prompt step's criterion is met.
-5. **Write.** Write the deliverable at the path the prompt names, in the brief's deliverable format. Head it with the run date, the model, the effort level and the research-agent plugin version. If code can run, write and run the reference-case script; mark any hand-computed value.
-   Done when the brief's done-criterion holds.
+5. **Write.** Write the deliverable at the path the prompt names, in the brief's deliverable format, to the standard in the research-writing skill. Head it with the run date, the model, the effort level and the research-agent plugin version. If code can run, write and run the reference-case script; mark any hand-computed value.
+   Done when the brief's done-criterion and the research-writing skill's done-criteria hold.
 6. **Review.** Run the protocol's self-review. Then ask the reviewer subagent for an independent review, and resolve each finding or list it as open.
    Done when every checklist item passes or is listed as open.
 7. **Hand over.**

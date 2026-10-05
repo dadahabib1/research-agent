@@ -23,6 +23,7 @@ A handoff holds an agent's operating loop: select a task, check inputs, research
 
 ## Writing rules
 
+- Write prompts, briefs and handoffs to the research-writing skill; their reader is an agent with none of your context.
 - Name sources as "starting points to verify, not conclusions".
 - State the target behaviour positively. Keep prohibitions for hard guardrails, and pair each with the positive target.
 - Use the same leading words in the brief, the prompts and the code.
@@ -34,7 +35,7 @@ A handoff holds an agent's operating loop: select a task, check inputs, research
 
 ## Default deliverable template
 
-1. **Decisions to grill**: each decision with options, trade-offs, a recommendation and its validation rung.
+1. **Decisions to grill**: for each decision, its name (stable, lowercase with hyphens), the question it answers, the options, their trade-offs, the recommendation, the proposed parameters with units, its evidence grade and its validation rung.
 2. **Summary.**
 3. **Components**, each in the template: Decision · Evidence (graded) · Method · Data · Checks · Accuracy metric · Presentation (what the requester sees and records) · Phase.
 4. **Validation plan.**

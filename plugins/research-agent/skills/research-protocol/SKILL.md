@@ -49,8 +49,8 @@ Work the steps in order. Each ends on a completion criterion.
 
    Done when the scripts run green, or each failure is documented as a finding.
 
-7. **Write.** Use the requester's template, or the default in `references/prompt-writing.md`: decisions first, then findings, components, validation plan, reference cases, changes, open questions, sources. Report small, conditional and null results as results.
-   Done when every template field is filled.
+7. **Write.** Write to the standard in the research-writing skill. Use the requester's template, or the default in `references/prompt-writing.md`: decisions first, then findings, components, validation plan, reference cases, changes, open questions, sources. Report small, conditional and null results as results.
+   Done when every template field is filled and the research-writing skill's done-criteria hold.
 
 8. **Self-review.** Run the checklist in `references/review.md`.
    Done when every item passes or is listed as open.
@@ -89,3 +89,4 @@ Each rule's incident and check are in `references/takeaways.md`.
 - `references/takeaways.md`: rules learned from past runs, each with its incident and check. Read at the start of every run; add to it at step 10.
 - `references/finance.md`: rules for finance, investing and economics topics. Read for any such topic.
 - `references/effort-and-cost.md`: model, effort and cost settings. Read at step 1.
+- The research-writing skill: the writing standard for deliverables, briefs, prompts and reviews. Read at step 7, and whenever writing for the requester or another agent.

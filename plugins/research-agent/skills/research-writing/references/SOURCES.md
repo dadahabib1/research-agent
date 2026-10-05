@@ -1,0 +1,37 @@
+# Sources for the research-writing skill
+
+All sources were accessed on 2026-10-05. No source text is copied into this skill; everything is paraphrased, and the examples are our own. "Opened" means the source itself was read. "Secondary" means the book was not available, so its content was checked through the summaries named; "snippet" marks a summary seen only in search results.
+
+| Source | URL | Licence | Status | Used for | How used |
+|---|---|---|---|---|---|
+| US Federal Plain Language Guidelines (2011, revision 1), as maintained in the plainlanguage.gov archive by the US General Services Administration | https://github.com/GSA/plainlanguage.gov (`_pages/guidelines/`); the site plainlanguage.gov now redirects to https://digital.gov/guides/plain-language | US Government work, public domain in the US; CC0 1.0 worldwide (repository `LICENSE.md`) | Opened | Document level (bottom line first, question and statement headings, tables, if-then tables, short sections); paragraph level (topic sentences, short paragraphs); sentence level (hidden verbs, noun strings, main idea before exceptions, one term per concept, few abbreviations); paraphrase testing | Condensed into `plain-language.md` in our own words, with new examples |
+| digital.gov, *Plain language guide series* | https://digital.gov/guides/plain-language | US Government work, public domain in the US | Opened | Confirmed the guidelines' current home and the Plain Writing Act of 2010 basis | Consulted only |
+| Steven Pinker, *The Sense of Style* (Viking, 2014), chapters 2 and 3 | https://stevenpinker.com/publications/sense-style-thinking-persons-guide-writing-21st-century | Copyright Steven Pinker | Secondary: Farnam Street (opened), "Steven Pinker tells us why our professional writing sucks" (https://fs.blog/stephen-pinker-tells-us-why-our-professional-writing-sucks-and-what-to-do/); The Psychologist (BPS), "Cursed knowledge" (https://bps.org.uk/psychologist/cursed-knowledge, snippet); remaining detail on hedging and metadiscourse from memory, [UNVERIFIED] against the book | Reader level: classic style (the writer shows the reader something; writer and reader as equals), the smart outsider as the target reader, the curse of knowledge with chunking and functional fixity, define terms, give examples, test on real readers; evidence level: hedge only where a real qualification applies; sentence level: cut metadiscourse and signposting | Paraphrased |
+| Francis-Noël Thomas and Mark Turner, *Clear and Simple as the Truth* (Princeton University Press, 1994) | https://press.princeton.edu/books/paperback/9780691147437/clear-and-simple-as-the-truth | Copyright the authors | Not opened; named because Pinker credits it as the origin of "classic style" | Attribution only | Not used directly |
+| Barbara Minto, *The Pyramid Principle* (first published 1973; FT Prentice Hall, 3rd edition 2002) | https://barbaraminto.com/ | Copyright Barbara Minto | Secondary: barbaraminto.com (opened); Think Insights, "SCQA logic" (https://thinkinsights.net/strategy/scqa-logic, snippet); Model Thinkers, "Pyramid principle" (https://modelthinkers.com/mental-model/225, snippet) | Document level: governing thought (answer) first; ideas at each level summarise the group below; groups hold one kind of idea in a stated order; groups are mutually exclusive and collectively exhaustive; introduction as situation, complication, question | Paraphrased |
+| Google developer documentation style guide: highlights, headings, tables, units of measurement | https://developers.google.com/style/highlights, https://developers.google.com/style/headings, https://developers.google.com/style/tables, https://developers.google.com/style/units-of-measure | CC BY 4.0 (code samples Apache 2.0) | Opened | Document level: sentence-case headings, no skipped levels, text between headings, introduce each table with a sentence, tables for items with several attributes. Sentence level: active voice, conditions before instructions, numbers with their units | Paraphrased |
+| Wikipedia, "Wikipedia:Signs of AI writing" | https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing | CC BY-SA 4.0 | Opened | Final pass: the families of AI writing patterns (inflated significance, vague attribution, superficial -ing analysis, stock vocabulary, copula avoidance, negative parallelism, rule of three, formatting habits, chat addressed to the user, formulaic conclusions, placeholders, broken citations), and the caveat that the signs are not proof of authorship | Described in our own words, with a link; no text copied |
+
+## Secondary sources
+
+These summaries were used only to check the books above that were not available. None carries an open licence, so each is treated as all rights reserved; nothing is copied from them.
+
+| Source | URL | Licence | Status | Used for |
+|---|---|---|---|---|
+| Farnam Street, "Steven Pinker tells us why our professional writing sucks" | https://fs.blog/stephen-pinker-tells-us-why-our-professional-writing-sucks-and-what-to-do/ | Copyright Farnam Street Media; all rights reserved | Opened | Checking Pinker on classic style and the curse of knowledge |
+| The Psychologist (British Psychological Society), "Cursed knowledge" | https://bps.org.uk/psychologist/cursed-knowledge | Copyright the British Psychological Society; all rights reserved | Snippet | Checking Pinker on the curse of knowledge |
+| barbaraminto.com | https://barbaraminto.com/ | Copyright Barbara Minto; all rights reserved | Opened | Checking Minto's pyramid principle |
+| Think Insights, "SCQA logic" | https://thinkinsights.net/strategy/scqa-logic | Copyright Think Insights; all rights reserved | Snippet | Checking Minto's situation, complication, question |
+| Model Thinkers, "Pyramid principle" | https://modelthinkers.com/mental-model/225 | Copyright Model Thinkers; all rights reserved | Snippet | Checking Minto's grouping rules |
+
+## What each source contributes, by level
+
+| Source | Document | Paragraph | Sentence |
+|---|---|---|---|
+| Plain-language guidelines | Bottom line first; order by the reader's questions; question or statement headings; tables and if-then tables | Topic sentence first; one topic per paragraph; short paragraphs and sections | Active voice; verbs over hidden verbs; no noun strings; main idea before exceptions; one term per concept; few abbreviations |
+| Pinker | Classic style: the document shows the reader something | Concrete example before the abstraction; define a term before relying on it | Cut metadiscourse and signposting; hedge only where a real qualification applies |
+| Minto | Answer (governing thought) first; situation, complication, question as the only lead-in | Each group of points summarised by the idea above it; one kind of point per group; stated order; no overlaps or gaps | None |
+| Google style guide | Sentence-case headings; no skipped levels; text between headings; tables for items with several attributes, each introduced by a sentence | None | Active voice; condition before instruction; units with every number |
+| Wikipedia, "Signs of AI writing" | Formulaic conclusions; formatting habits (bold, inline-header lists, title case) | Inflated significance; vague attribution; tacked-on -ing analysis | Stock vocabulary; avoiding "is"; negative parallelism; reflexive threes |
+
+Evidence prose (claim, evidence, grade, caveat) combines Pinker's proportionate hedging with the research-protocol skill's `references/standards.md` grades and labels.

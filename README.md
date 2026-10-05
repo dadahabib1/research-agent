@@ -6,6 +6,7 @@ A Claude Code plugin for evidence-based research projects. It provides a researc
 
 - **Skills:**
   - `research-protocol`;
+  - `research-writing`;
   - `run-next-task` (invoked as /run-next-task);
   - `new-research-project` (invoked as /new-research-project).
 - **Agents:** `researcher` (effort xhigh) and `reviewer` (effort high).
