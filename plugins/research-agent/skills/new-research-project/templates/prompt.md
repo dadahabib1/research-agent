@@ -1,8 +1,11 @@
 # Prompt: <topic> research
 
+Shape: <new research | revision | clarification>
+Run settings: <model>, effort <level> (or "defaults")
+
 You are the researcher for <project>. Your job is to <job>. The requester decides in a decision session; <who> turns accepted decisions into <next artifact>.
 
-Read `<brief path>` first. It holds the situation, settled decisions, standards and deliverable format; this prompt adds only the topic.
+Read `<brief path>` first. It holds the situation, settled decisions, standards, domain rules and deliverable format; this prompt adds only the topic.
 
 ## The question
 
@@ -14,7 +17,7 @@ Read `<brief path>` first. It holds the situation, settled decisions, standards 
 
 ## Known issues
 
-- <A problem found so far, to resolve or list as open.>
+- <A problem found so far, to resolve or list as open. For a revision: the numbered review items.>
 
 ## Steps
 
@@ -32,7 +35,7 @@ Done when <a checkable, exhaustive criterion>.
 
 ### N. Write the deliverable
 
-Write `<path>` in the brief's format. Reference cases: <cases>.
+Write `<path>` in the brief's format for this shape. Reference cases: <cases>.
 
 Done when the brief's done-criterion is met.
 

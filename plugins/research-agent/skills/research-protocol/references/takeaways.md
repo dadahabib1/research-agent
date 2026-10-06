@@ -1,6 +1,6 @@
 # Takeaways from past research runs
 
-Each entry gives the rule, the incident that taught it, and a check a reviewer can run. Add new entries at step 10 of the protocol.
+Each entry gives the rule, the incident that taught it, and a check a reviewer can run. Entries 1 to 35 come from the equity research project this plugin was generalised from (runs of 2026-10-02 to 2026-10-05); entries from 36 come from runs under the plugin. Runs propose candidates in their change logs and pull requests (protocol step 10); the plugin's maintainer adds accepted ones here, after checking that no existing entry covers the rule.
 
 ## A. Evidence and sources
 
@@ -127,3 +127,24 @@ Each entry gives the rule, the incident that taught it, and a check a reviewer c
 35. **Stop on missing inputs.**
     *Incident:* an early prompt told the agent to stop and ask if anything was missing. Agents that fill gaps with guesses produce confident errors.
     *Check:* a missing input stops the run with a report.
+
+## H. From the first plugin run (system review v1, 2026-10-05)
+
+36. **A summarising fetch is not the page.**
+    *Incident:* a fetch tool's summary of an exchange calendar invented an early-close date the page's footnotes did not contain; two other summary-derived dates had to be marked [UNVERIFIED] or rejected.
+    *Check:* decision-critical numbers, dates and quotations come from a raw fetch or a second route, or carry the summary-fetched label.
+37. **Constants come from the owning source, not memory.**
+    *Incident:* a company's industry code was typed from memory; the regulator's record gave a different code, and a universe assertion failed.
+    *Check:* every constant in a script cites its source and date.
+38. **An error page is not a document.**
+    *Incident:* two 403 responses were saved as `.pdf` files and counted as fetched sources.
+    *Check:* a fetched file is opened and its first page read before it enters the Sources table.
+39. **Compare numbers as numbers.**
+    *Incident:* a duplicate check compared values as strings, so nine of ten "conflicts" were rounding artefacts.
+    *Check:* comparisons apply the standard's rounding rule, and a known-duplicate fixture passes.
+40. **One sample per ratio.**
+    *Incident:* a share was computed with a numerator from one sample and a denominator from another, and the rule it fed was never run.
+    *Check:* every ratio names the sample of both numerator and denominator, and the rule runs on a fixture.
+41. **Set the run's settings before it starts.**
+    *Incident:* the first plugin run recorded "effort not set; treated as high" although the researcher agent specifies xhigh, and spend was reported only after review.
+    *Check:* the log header records shape, model and effort before intake, and the hand-over reports spend.
