@@ -50,7 +50,7 @@ The numbers and the source in this example are ILLUSTRATIVE.
 
 - **The claim** is one specific sentence that could be wrong, with its number.
 - **The evidence** names the source, what it measured and over which period, and cites it where the claim is made.
-- **The grade** follows the protocol's A to D scale, and the label ([ESTABLISHED], [DEBATE], [MY JUDGMENT]) where one applies.
+- **The grade** follows the protocol's evidence-by-claim-type table: A to D for a literature claim, the sample and script for a measurement, the version or date for a documented fact, and the label ([ESTABLISHED], [DEBATE], [MY JUDGMENT], [PROVIDED]) where one applies.
 - **The caveat** is the limitation most likely to change the decision. One sharp caveat beats a list of every possible weakness.
 
 Hedge in proportion to the evidence, once, where it applies.
@@ -61,6 +61,9 @@ Hedge in proportion to the evidence, once, where it applies.
 | Grade B | "The evidence indicates X," then the main limitation. |
 | Grade C | "One study found X"; name the study. |
 | Grade D, opinion, untested | "X is untested"; say what test would settle it. |
+| Measured (a script on a named sample) | Plainly, with the sample and script: "On the 2019 to 2025 sample (`scripts/x.py`), X is Z." |
+| Documented (the owning source at a version or date) | Plainly, with the version or date: "Version 1.64 does X [docs, 2026-03]." |
+| [PROVIDED] by the requester or project | As given, naming the provider and date: "The requester reports X (stated 2026-10-01)"; no grade. |
 
 - Do not stack hedges ("may possibly suggest"). One qualifier, chosen to match the grade, is enough.
 - Do not hedge what is certain, such as arithmetic or the text of a rule. Do not state as certain what was never tested.
@@ -109,7 +112,7 @@ After the decision session, an agent reads the decision records and writes specs
 - **Make each decision stand alone.** A decision states everything needed to implement it: its parameters, its rule, its acceptance tests and its constraints. Never rely on "as above", "the usual threshold" or a definition three sections back; repeat the value or name the decision it depends on.
 - **One term, one meaning.** Reuse the deliverable's leading words exactly, spelled the same way and with the same capitalisation. If a decision needs a new term, define it inside the decision.
 - **State exact values.** Each value has its unit, its denominator and, where it varies, its allowed range with inclusive or exclusive bounds: "rebalance when a holding's weight drifts 5 percentage points or more from target (share of portfolio market value; range 3 to 7, inclusive)". Inside a decision, never write "about", "roughly" or "~".
-- **Label every statement** as one of:
+- **Label a statement's status where the record's fields do not already give it,** as one of:
   - [FACT]: sourced or computed, with its section;
   - [ASSUMPTION]: taken as true until confirmed, with who confirms it;
   - [DECISION]: accepted in the decision session;
@@ -129,7 +132,7 @@ The values in this section's examples are ILLUSTRATIVE.
 - Every heading states a finding or asks a question the reader would ask.
 - Every number has units, a denominator, a date and a REAL or ILLUSTRATIVE label.
 - Every leading word is defined on first use and used consistently.
-- Every finding gives its claim, cited evidence, grade and caveat, with hedges matching the grade.
+- Every finding gives its claim, cited evidence, evidence kind and grade, and caveat, with hedges matching the evidence.
 - The sentence-level edit and the AI-pattern pass are done.
 - An outsider, person or fresh agent, can restate the decision and its reason.
 - Every decision stands alone: a stable name, exact parameters, a normative rule, at least one acceptance test, and a pointer to its evidence.

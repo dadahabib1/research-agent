@@ -1,4 +1,4 @@
-# Research brief (docs/research/strategy-research-brief.md)
+# Research brief (<project>/docs/research/strategy-research-brief.md)
 
 Single source of truth for every research run in this project. Prompts point here and add only their topic. Dated YYYY-MM-DD.
 
@@ -18,7 +18,7 @@ Single source of truth for every research run in this project. Prompts point her
 
 ## 4. Leading words
 
-<The concepts every run thinks with, each defined once.>
+<The concepts every run thinks with, each defined once. Field-specific words may live under heading 8 of the domain rules.>
 
 ## 5. The research program
 
@@ -28,9 +28,15 @@ Single source of truth for every research run in this project. Prompts point her
 
 Use the research-protocol skill's `references/standards.md`, plus: <project-specific standards and interim rules>.
 
+### Domain rules
+
+Domain rules: `<path, for example docs/research/domain-rules.md>`
+
+That file holds the rules the general protocol cannot know for this field: when information counts as known, what settles each claim type here, the standard methods to reuse, units and denominators, feasibility at the requester's scale, data sources and licences, advice boundaries, and domain words. The researcher applies them and the reviewer checks them. Start it from the `new-research-project` skill's `templates/domain-rules.md`, keep every heading, and write "none known" rather than delete one.
+
 ## 7. Deliverable format
 
-Use the default template in the research-protocol skill's `references/prompt-writing.md`, plus: <project-specific sections>.
+Use the default templates in the research-protocol skill's `references/prompt-writing.md` for each shape (new research, revision, clarification), plus: <project-specific sections, and any fixed component fields for this field>.
 
 ## 8. Open inputs
 
