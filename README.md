@@ -27,7 +27,6 @@ A Claude Code plugin that a project installs to run evidence-based research task
 ```
 
 - **Manually:** run `/plugin marketplace add dadahabib1/research-agent`, then `/plugin install research-agent@personal-agents`.
-- **Installed from the old `erimhabib-work/research-agent` address:** run `/plugin marketplace remove personal-agents`, then the two manual commands above, and update the `repo` line in any project's `.claude/settings.json`.
 - **For claude.ai chat and Cowork:** zip `plugins/research-agent/skills/research-protocol/` and upload it as a skill.
 
 ## Use
