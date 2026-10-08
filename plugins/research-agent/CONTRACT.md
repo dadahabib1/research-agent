@@ -5,7 +5,7 @@ What a project that installs this plugin may depend on. Everything listed here k
 ## Skills and agents
 
 - Skills: `research-protocol`, `research-writing`, `run-next-task` (`/run-next-task`), `new-research-project` (`/new-research-project`).
-- Agents, invoked by their bare names as `subagent_type`: `researcher` (web search and fetch only), `reviewer` (reads and runs scripts; no web). A project that configures a raw-page fetcher as an MCP server named `firecrawl` makes its search and scrape tools available to the researcher; no other project tool reaches it. A project that needs a different fetch server may place its own `.claude/agents/researcher.md` (project agents outrank plugin agents for the bare name) with the same body and a `tools:` line that names its server's search and scrape tools and nothing else.
+- Agents, invoked by their plugin-scoped names as `subagent_type`: `research-agent:researcher` (web search and fetch only; launched without the user, project and local `CLAUDE.md` files, so project facts reach it only through the delegation prompt), `research-agent:reviewer` (reads and runs scripts; no web). A project that configures a raw-page fetcher as an MCP server named `firecrawl` makes its search and scrape tools available to the researcher; no other project tool reaches it. A project that needs a different fetch server may place its own `.claude/agents/researcher.md` with `name: researcher`, the same frontmatter and body, and a `tools:` line that names its server's search and scrape tools and nothing else; `/run-next-task` then calls it by the bare name `researcher` in place of the plugin's.
 
 ## What the plugin reads from the project
 
@@ -37,6 +37,12 @@ It never writes decision records (the decision session does, from the project's 
 - `skills/new-research-project/templates/`: `prompt.md`, `log.md`, `decision-record.md`, `brief.md`, `domain-rules.md`, `queue.md`.
 
 ## Changes to the contract
+
+### 0.4.1
+
+- Clarified: the agents are invoked by their plugin-scoped names, `research-agent:researcher` and `research-agent:reviewer`, as Claude Code registers plugin agents; 0.4.0 said bare names. A project's own `.claude/agents/researcher.md` still replaces the plugin's researcher, now because `/run-next-task` calls the bare name `researcher` when the project defines one.
+- Changed: the researcher sets `omitClaudeMd: true`, so the user, project and local `CLAUDE.md` files no longer reach it (requires Claude Code v2.1.271 or later; older versions ignore the field). Managed policy files and the git status snapshot still do.
+- Unchanged: agent file names, tool lists, the `firecrawl` server name and every other name, path and shape above.
 
 ### 0.4.0
 
