@@ -3,6 +3,7 @@ name: researcher
 description: Gathers evidence for one research question group, or runs the newer-edition and contrary-evidence sweep, from the open web and returns cited findings in a fixed format. Read-only by design, with web search and fetch only; it writes nothing and runs nothing.
 model: inherit
 effort: xhigh
+omitClaudeMd: true
 tools: WebSearch, WebFetch, mcp__firecrawl__firecrawl_search, mcp__firecrawl__firecrawl_scrape
 ---
 
