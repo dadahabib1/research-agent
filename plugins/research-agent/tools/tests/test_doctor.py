@@ -416,3 +416,11 @@ def test_version_ranges():
     assert doctor.in_range("1.10.0", ">1.9.9")
     with pytest.raises(ValueError):
         doctor.in_range("0.6.0", "^0.6")
+
+
+def test_the_plugins_own_kit_passes_check_8(valid):
+    kit = Path(doctor.__file__).resolve().parents[1] / "kit"
+    for name in doctor.KIT_FILES:
+        shutil.copy(kit / name, valid / ".research-agent" / name)
+    report, _ = diagnose(valid, "run")
+    assert report.items == []
