@@ -1,0 +1,16 @@
+requires = ">=0.6.0, <0.7.0"
+
+[project]
+root = "docs/research"
+decider = "requester"
+env = ["DEMO_API_KEY"]
+
+[project.consumer]
+name = "demo-app"
+context = "consumer-context.md"
+
+[project.fetch_identity]
+"example.gov" = "DEMO_IDENTITY"
+
+[consumes]
+research = "self"
