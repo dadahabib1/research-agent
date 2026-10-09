@@ -1,0 +1,1 @@
+Copied read-only for the hash-parity test: `decisions/` from dadahabib1/equity_research main at 2712374 (`docs/research/decisions/`), and `research-lock.md` from dadahabib1/equity_analyst_v2 main at 03f40a6 (`docs/research-lock.md`), whose 12 hashes the app's own `scripts/research_drift.py` computed. Do not edit.
