@@ -12,12 +12,13 @@ sys.path.insert(0, str(HERE.parent))
 import doctor  # noqa: E402
 
 FIXTURES = HERE / "fixtures"
+EQUITY_FIXTURES = HERE.parents[3] / "test-fixtures"  # finance fixtures live outside the shipped plugin folder
 ENV_NAMES = ("FETCH_RAW_IDENTITY_HOSTS", "DEMO_IDENTITY", "DEMO_API_KEY", "EDGAR_IDENTITY", "FRED_API_KEY")
 
 
 def copy_fixture(name: str, dest: Path) -> Path:
     """Copy a fixture project to dest, restoring CLAUDE.md from _CLAUDE.md."""
-    shutil.copytree(FIXTURES / name, dest)
+    shutil.copytree((EQUITY_FIXTURES if name.startswith("equity") else FIXTURES) / name, dest)
     stored = dest / "_CLAUDE.md"
     if stored.exists():
         stored.rename(dest / "CLAUDE.md")

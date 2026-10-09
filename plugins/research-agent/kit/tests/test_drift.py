@@ -7,9 +7,9 @@ import re
 import shutil
 from pathlib import Path
 
-from conftest import FIXTURES, KIT, commit, drift, git, init, lock, make_host, write
+from conftest import KIT, commit, drift, git, init, lock, make_host, write
 
-EQUITY = FIXTURES / "equity"
+EQUITY = KIT.parents[2] / "test-fixtures" / "equity"  # outside the shipped plugin folder
 APP_CONSUMES = '[consumes]\nresearch = "dadahabib1/equity_research"\n'
 REQUIRES = 'requires = ">=0.6.0, <0.7.0"\n'
 

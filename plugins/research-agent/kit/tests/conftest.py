@@ -8,7 +8,6 @@ import pytest
 
 HERE = Path(__file__).resolve().parent
 KIT = HERE.parent
-FIXTURES = HERE / "fixtures"
 GIT_ENV = {"GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@example.invalid",
            "GIT_COMMITTER_NAME": "t", "GIT_COMMITTER_EMAIL": "t@example.invalid"}
 

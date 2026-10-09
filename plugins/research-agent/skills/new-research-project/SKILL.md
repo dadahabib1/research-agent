@@ -8,6 +8,8 @@ allowed-tools: Bash(uv run --script ${CLAUDE_PLUGIN_ROOT}/tools/doctor.py *), Ba
 
 The contract is `${CLAUDE_PLUGIN_ROOT}/CONTRACT.md`: the config schema, the fixed layout and every format named below. Templates are in `${CLAUDE_PLUGIN_ROOT}/skills/new-research-project/templates/`. The plugin's version is `version` in `${CLAUDE_PLUGIN_ROOT}/.claude-plugin/plugin.json`.
 
+**Reads.** Read only the plugin files this skill names, at the step that names them. The rest of the plugin folder (tools, tests, the other skills) is not part of setup; the doctor reports what the project has.
+
 **Writes.** Every write is "create if missing; otherwise compare and report". Never overwrite project content, never delete a file, never edit an accepted decision record. Changes to an existing file (the `CLAUDE.md` pointer, `.gitignore` lines, settings, a new `requires`) are listed first and made only after the host or user confirms. Leave everything in the working tree; the host commits it its usual way. A second run on a project that passed the doctor changes nothing.
 
 ## Steps
@@ -15,7 +17,7 @@ The contract is `${CLAUDE_PLUGIN_ROOT}/CONTRACT.md`: the config schema, the fixe
 1. **Detect the mode.** Run `uv run --script ${CLAUDE_PLUGIN_ROOT}/tools/doctor.py --mode setup` at the repository root and read its `config:` line and check 1:
    - **new:** no `research-agent.toml` and no research files (check 1 FAIL: no config and no "Research" section);
    - **adopt:** research files exist with no config (check 1 DEPRECATED), or a config whose `requires` excludes this plugin version (check 1 FAIL on the range). Upgrading is adopt on a project that has a config;
-   - **consumer:** ask whether this repository builds on decisions from research held in another repository. If yes, consumer mode runs as well, alone or after new or adopt. A repository that runs research and builds on it itself gets `[consumes] research = "self"` and the kit, after new mode.
+   - **consumer:** in new or adopt mode, or when the host or user asks to connect a consumer, ask whether this repository builds on decisions from research held in another repository. A config that passes the doctor with no `[consumes]` table has no consumer, so a re-run does not ask again. If yes, consumer mode runs as well, alone or after new or adopt. A repository that runs research and builds on it itself gets `[consumes] research = "self"` and the kit, after new mode.
    - A config that passes and needs no consumer change: nothing to set up; report the doctor's result and end.
 
    State the mode and the files it will write, then wait for the host or user to confirm.
@@ -36,12 +38,12 @@ The contract is `${CLAUDE_PLUGIN_ROOT}/CONTRACT.md`: the config schema, the fixe
      - A `[consumes]` table: `research = "<owner/repo>"` (or `"self"`), and `clone` only when the clone is not at `../<repo name>`.
      - The kit: `mkdir -p .research-agent`, then `cp ${CLAUDE_PLUGIN_ROOT}/kit/INTEGRATION.md ${CLAUDE_PLUGIN_ROOT}/kit/research_drift.py .research-agent/`. Copy with `cp`, never by rewriting, so the stamps match. Replace an existing kit file only when the doctor reports its stamp's version outside `requires` and no local edit; report a local edit instead.
      - `docs/research-lock.md` from `templates/research-lock.md`, if missing; if it exists without a "Pinned rules" table, add the empty table.
-     - The `CLAUDE.md` pointer: "Research: this repository builds on `<owner/repo>` (`research-agent.toml`); how to consume it: `.research-agent/INTEGRATION.md`."
+     - The `CLAUDE.md` pointer: "Research: this repository builds on `<owner/repo>` (`research-agent.toml`); how to consume it: `.research-agent/INTEGRATION.md`." With `research = "self"`: "Research: this repository builds on its own research (`research-agent.toml`); how to consume it: `.research-agent/INTEGRATION.md`."
 
    Done when every file the mode writes exists, and every confirmed change is made.
 
 3. **Fill the brief and the domain rules** (new mode, or adopt where they are empty). Run the interview through whoever invoked this skill:
-   - **A host agent** answers each question from what its own system records, and the answer is labelled `[PROVIDED: project]` with its source and date. The host passes to its user only what it cannot answer: decisions, and facts about the requester.
+   - **A host agent** answers each question from what its own system records, and the answer is labelled `[PROVIDED: project]` with its source and date. What the host proposes from its own knowledge, with no record behind it, is labelled `[PROPOSED: host]`, and a rule it proposes names the host as its Source until the requester confirms that rule. The host passes to its user only what it cannot answer: decisions, and facts about the requester.
    - **A person** is interviewed directly, using the research-protocol skill's `references/intake.md` and `references/questioning.md`.
    - Ask each question once; never ask the host and then the user. Record each answer's source (requester, `[PROVIDED: project]`, looked up, or assumption) as `intake.md` does for runs.
    - For the domain rules, work through the eight headings: look up what can be looked up (the field's standard methods, its data sources and their licences, its timestamp conventions) and propose each as a recommended answer; ask only for decisions and facts about the requester's situation. Write each rule in the rule format with an ID, Check, Scope, Source and Added; replace the ILLUSTRATIVE examples; write "none known" under a heading with no rule.
@@ -52,4 +54,4 @@ The contract is `${CLAUDE_PLUGIN_ROOT}/CONTRACT.md`: the config schema, the fixe
    Done when every named topic has a prompt and a queue row.
 
 5. **Check.** Run `uv run --script ${CLAUDE_PLUGIN_ROOT}/tools/doctor.py --mode setup`. Fix each FAIL that this setup caused; report the rest, with each WARN and DEPRECATED item, to the host or user.
-   Done when the doctor reports no FAIL.
+   Done when the doctor reports no FAIL. Tell the host or user to commit setup's changes and merge them into the default branch before the first `/run-next-task`, so a run's pull request carries only the run.
