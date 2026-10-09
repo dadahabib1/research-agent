@@ -6,7 +6,7 @@
       "name": "research-agent",
       "source": "./plugins/research-agent",
       "description": "A research tool a project installs: a protocol with evidence standards by claim type, a session loop that runs one queued task per session and ends in a pull request, and read-only researcher and reviewer subagents. Writes only into the installing project.",
-      "version": "0.4.1"
+      "version": "0.5.0"
     }
   ]
 }

@@ -19,9 +19,11 @@ A search snippet is not a source. Fetch the page and read the part that supports
 
 | Fetch | What the researcher saw | Rule |
 |---|---|---|
-| Raw | The page text itself: a raw-fetch tool, a data file, an API response | Cite normally |
-| Summary | A fetch tool's paraphrase of the page (Claude Code's WebFetch answers a prompt about the page with a smaller model and truncates) | Fine for orientation. A decision-critical number, date, quotation or rule text taken this way is labelled summary-fetched (`standards.md`) until a raw fetch or a second route confirms it |
+| Raw | The page text itself: the plugin's `fetch_raw` tool, a data file, an API response | Label raw-fetched; cite normally |
+| Summary | A fetch tool's paraphrase of the page (Claude Code's WebFetch answers a prompt about the page with a smaller model and truncates) | For discovery and orientation only. A value taken this way is labelled summary-fetched (`standards.md`) until `fetch_raw` or a second route confirms it |
 | Snippet | Search-result text only; the page did not open | Label snippet; keep it off decision-critical paths |
+
+Every decision-critical number, date, quotation or rule text comes from `fetch_raw` (raw-fetched) or from a second route that confirms it. `fetch_raw` returns a header (status, final URL, content type, fetch time, sha256 of the body, route) and then the text: HTML as markdown with every table cell kept, superscripts as `^[x]` and subscripts as `_[x]`, PDFs per page. Long documents come in pages: call again with the `next_offset` it returns until it is `none`. Firecrawl's own markdown, parse and JSON outputs are not raw: they merge superscripts into numbers, escape characters or come from a model, so their values are summary-fetched too.
 
 The incident behind the rule: a summary of an exchange calendar invented an early-close date that the page's footnotes did not contain, and the run caught it only by reading the raw page (`takeaways.md`, entry 36).
 
@@ -30,8 +32,9 @@ The incident behind the rule: a summary of an exchange calendar invented an earl
 A 403 or 503, a redirect to an unblock page, a PDF with no text layer, a page that renders only with JavaScript:
 - try the publisher's own storage or document host (standard-setters often serve PDFs from a separate domain), a regional mirror, or the abstract's registry;
 - for a paywalled book, cite the chapter from the publisher's table of contents or index;
-- retry with a raw-fetch tool if the session has one; it renders JavaScript and parses PDFs;
-- otherwise record the attempt under Dead ends with the status, label any dependent claim snippet, and never save an error body as a document (entry 38).
+- `fetch_raw` with its default route already retries a blocked page through Firecrawl when the project has set `FIRECRAWL_API_KEY`; it does not run JavaScript itself;
+- a `fetch_raw` result with status BLOCKED (a bot wall, captcha, login or JavaScript-only page) or ERROR has no content: it is a dead end to log, never content;
+- otherwise record the attempt under Dead ends with the status and reason, label any dependent claim snippet, and never save an error body as a document (entry 38).
 
 ## 5. Lateral reading
 

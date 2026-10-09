@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Synthetic commissions page</title>
+<style>.price { font-weight: bold } /* 9.99 must not appear */</style>
+<script>var tiers = [0.0035, 0.0020, 99.5];</script>
+</head>
+<body>
+<nav><a href="/en/home.php">Home</a> | <a href="pricing/">Pricing</a></nav>
+<main>
+<h1>Fixed and tiered commissions</h1>
+<table>
+  <thead>
+    <tr><th>Monthly Volume (shares)<sup>1,7</sup></th><th>USD per share</th><th>Minimum per order</th><th>Maximum per order</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>&le; 300,000</td><td>USD <span class="price">0.0035</span></td><td>USD <span class="price">0.35</span><sup> 12</sup></td><td><span class="price">1%</span> of Trade Value<sup>4,8</sup></td></tr>
+    <tr><td>300,001 - 3,000,000</td><td>USD <span class="price">0.00056<sup>5</sup></span></td><td>USD <span class="price">0.00<sup>2</sup></span></td><td><span class="price">1%</span> of Trade Value<sup>4,8</sup></td></tr>
+    <tr><td>&gt; 100,000,000</td><td>USD <span class="price">0.0005</span></td><td></td><td>IB SmartRouting<sup>SM</sup></td></tr>
+  </tbody>
+</table>
+<p>Water is H<sub>2</sub>O; the area is 12 m<sup>2</sup>.</p>
+<h2>Example</h2>
+<p>400 Shares @ HKD 70 Share Price = HKD 22.40</p>
+<p>See the <a href="/en/pricing/notes.php#fn2">notes</a> and the <a href="https://example.org/abs?id=7">external page</a>.</p>
+</main>
+<footer>
+<ol class="footnotes">
+<li><sup>1</sup> Tiers follow the month-to-date share count at order time.</li>
+<li><sup>2</sup> Venue fees are extra; the minimum is USD 0.35.</li>
+<li><sup>5</sup> The tiered rate of 0.00056 applies above the first tier.</li>
+</ol>
+<p>&copy; 2026 Example Brokers LLC. Synthetic fixture.</p>
+</footer>
+</body>
+</html>
