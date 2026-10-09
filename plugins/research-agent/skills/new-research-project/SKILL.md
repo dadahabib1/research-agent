@@ -8,7 +8,7 @@ allowed-tools: Bash(uv run --script ${CLAUDE_PLUGIN_ROOT}/tools/doctor.py *), Ba
 
 The contract is `${CLAUDE_PLUGIN_ROOT}/CONTRACT.md`: the config schema, the fixed layout and every format named below. Templates are in `${CLAUDE_PLUGIN_ROOT}/skills/new-research-project/templates/`. The plugin's version is `version` in `${CLAUDE_PLUGIN_ROOT}/.claude-plugin/plugin.json`.
 
-**Reads.** Read only the plugin files this skill names, at the step that names them. The rest of the plugin folder (tools, tests, the other skills) is not part of setup; the doctor reports what the project has.
+**Reads.** Open plugin files by the exact paths this skill names, at the step that names them; the doctor reports what the project has. Listing or searching the plugin folder (`ls`, `find`, Glob, Grep) is not part of setup, and neither is the rest of it (tools, tests, agents, the other skills).
 
 **Writes.** Every write is "create if missing; otherwise compare and report". Never overwrite project content, never delete a file, never edit an accepted decision record. Changes to an existing file (the `CLAUDE.md` pointer, `.gitignore` lines, settings, a new `requires`) are listed first and made only after the host or user confirms. Leave everything in the working tree; the host commits it its usual way. A second run on a project that passed the doctor changes nothing.
 

@@ -6,7 +6,7 @@ allowed-tools: Bash(uv run --script ${CLAUDE_PLUGIN_ROOT}/tools/doctor.py *)
 
 # Run the next research task
 
-Run one research task per session. Names and formats are in `${CLAUDE_PLUGIN_ROOT}/CONTRACT.md`. Read only the plugin files this skill and the research-protocol skill name, at the step that names them.
+Run one research task per session. Names and formats are in `${CLAUDE_PLUGIN_ROOT}/CONTRACT.md`. Open plugin files by the exact paths this skill and the research-protocol skill name, at the step that names them. Listing or searching the plugin folder (`ls`, `find`, Glob, Grep) is not part of a run, and neither are the other plugin files, the agent definitions included: the subagents' model and effort are in `research-protocol/references/effort-and-cost.md`.
 
 ## Steps
 
