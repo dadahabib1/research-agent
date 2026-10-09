@@ -453,3 +453,32 @@ def test_a_project_written_from_the_templates_passes(tmp_path):
     (repo / ".gitignore").write_text("__pycache__/\n*.pyc\n", encoding="utf-8")
     report, _ = diagnose(repo, "setup")
     assert report.items == [], report.items
+
+
+def test_legacy_host_line_is_deprecated_not_fail(equity):
+    append(equity, f"{E}/domain-rules.md",
+           "\n### trust-tier-on-values: Every value handed to the app names its trust tier.\n"
+           "- Check: every such value names T1 to T4.\n- Scope: decision-critical\n"
+           "- Source: requester, 2026-10-07\n- Added: 2026-10-07\n- Host: equity_analyst_v2\n")
+    report, _ = diagnose(equity, "run")
+    assert by_check(report)["4a"] == {"DEPRECATED"}
+    assert "FAIL" not in report.levels()
+
+
+def test_prose_headings_outside_the_decisions_section_are_not_decisions(valid):
+    edit(valid, RECORD, "## Decisions\n", "## Context\n\n### Note: why this record exists\n\nProse.\n\n## Decisions\n")
+    append(valid, RECORD, "\n## Appendix\n\n### Detail: a sub-heading with a colon\n\nMore prose.\n")
+    report, _ = diagnose(valid, "run")
+    assert report.items == []
+
+
+def test_equity_records_still_pass_check_6(equity):
+    report, _ = diagnose(equity, "run")
+    assert "6" not in by_check(report)
+
+
+def test_undeclared_identity_map_warns_in_both_modes(valid):
+    edit(valid, CONFIG, '[project.fetch_identity]\n"example.gov" = "DEMO_IDENTITY"\n', "")
+    for mode in ("run", "setup"):
+        report, _ = diagnose(valid, mode)
+        assert by_check(report) == {"9": {"WARN"}}

@@ -19,7 +19,8 @@ Checks (0.6.x; "legacy" is a repository with no config whose CLAUDE.md has a "Re
   2  every fixed path and configured file exists
   3  the brief has headings 1 to 9 and its §6 "Domain rules:" line names the domain rules file
   4a the domain rules have headings 1 to 8; each ### rule has Check, Scope, Source and Added;
-     IDs are unique kebab-case; each Host: names the configured consumer
+     IDs are unique kebab-case; each Host: names the configured consumer (legacy: a Host: line
+     is DEPRECATED, since it cannot be checked without a config)
   4b a rule is still a bullet with no ID (DEPRECATED; FAIL from 0.7.0)
   5  the queue has the required columns and known statuses; each prompt file exists; each
      prerequisite names a task row (case ignored) or is "none"
@@ -28,7 +29,8 @@ Checks (0.6.x; "legacy" is a repository with no config whose CLAUDE.md has a "Re
   8  consumer: each kit file's stamp names a version inside requires and its hash matches; the
      lock parses
   9  FETCH_RAW_IDENTITY_HOSTS equals [project.fetch_identity] and each variable it names is set
-     (FAIL with --mode run, WARN with --mode setup)
+     (FAIL with --mode run, WARN with --mode setup); when FETCH_RAW_IDENTITY_HOSTS is set but
+     the config declares no [project.fetch_identity], WARN in both modes
   10 each other name in project.env is set (WARN)
   11 .gitignore has the Python cache lines (WARN)
   12 consumer: the research repository's consumer context file is no older than this
@@ -405,7 +407,10 @@ def check_rules(repo: Path, lay: Layout, report: Report) -> None:
             report.fail("4a", f"{where}: rule {rid} Scope must be decision-critical or all")
         if fields.get("Added") and not DATE.match(fields["Added"]):
             report.fail("4a", f"{where}: rule {rid} Added must be YYYY-MM-DD")
-        if "Host" in fields and fields["Host"] != lay.consumer:
+        if "Host" in fields and lay.legacy:
+            report.deprecated("4a", f"{where}: rule {rid} Host cannot be checked without a config; "
+                                    f"write {CONFIG} with [project.consumer]")
+        elif "Host" in fields and fields["Host"] != lay.consumer:
             expected = f"the configured consumer {lay.consumer!r}" if lay.consumer else "a configured [project.consumer]"
             report.fail("4a", f"{where}: rule {rid} Host {fields['Host']!r} is not {expected}")
     if bullets:
@@ -442,7 +447,8 @@ def check_queue(repo: Path, lay: Layout, report: Report) -> None:
 def decision_headers(text: str) -> tuple[list[dict], list[str]]:
     """Each decision subsection's parsed header, and the errors met."""
     headers, errors = [], []
-    parts = re.split(r"^(?=### )", text, flags=re.MULTILINE)
+    section = re.search(r"^## Decisions[ \t]*$(.*?)(?=^## |\Z)", text, flags=re.MULTILINE | re.DOTALL)
+    parts = re.split(r"^(?=### )", section.group(1) if section else "", flags=re.MULTILINE)
     for part in parts:
         heading = re.match(r"^### ([^:\n]+):", part)
         if not heading:

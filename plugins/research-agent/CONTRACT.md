@@ -88,7 +88,7 @@ In `prompts/`, from `templates/prompt.md`, with the optional lines `Shape:` (new
 
 ### Decision records
 
-In `decisions/`, from `templates/decision-record.md` (or the project's override). Each decision is a subsection `### <decision-name>: <one-sentence decision>` that opens with a fenced `yaml` header block:
+In `decisions/`, from `templates/decision-record.md` (or the project's override). Each decision is a subsection `### <decision-name>: <one-sentence decision>` under the record's `## Decisions` heading, and opens with a fenced `yaml` header block. Every `###` heading with a colon under `## Decisions` is read as a decision; other sections may hold any headings:
 
 ```yaml
 name: <decision-name>            # stable kebab-case; equals the subsection heading's name
@@ -148,7 +148,7 @@ Proposed decisions are proposals; only the decider decides, in a decision sessio
 
 ## The doctor
 
-`uv run --script ${CLAUDE_PLUGIN_ROOT}/tools/doctor.py --mode run|setup [--project PATH]` compares the config with the files on disk. `/new-research-project` runs it last with `--mode setup`; `/run-next-task` runs it at step 0 with `--mode run`. Each item prints on its own line as `FAIL`, `WARN` or `DEPRECATED` with its check number; the output names environment variables, never their values. Exit codes: 0 no FAIL; 1 at least one FAIL (the run or setup stops); 2 the doctor could not run. `--help` lists the checks.
+`uv run --script ${CLAUDE_PLUGIN_ROOT}/tools/doctor.py --mode run|setup [--project PATH]` compares the config with the files on disk. `/new-research-project` runs it last with `--mode setup`; `/run-next-task` runs it at step 0 with `--mode run`. Each item prints on its own line as `FAIL`, `WARN` or `DEPRECATED` with its check number; the output names environment variables, never their values. Exit codes: 0 no FAIL; 1 at least one FAIL (the run or setup stops); 2 the doctor could not run. `--help` lists the checks. The identity check FAILs with `--mode run` and WARNs with `--mode setup` when `[project.fetch_identity]` and `FETCH_RAW_IDENTITY_HOSTS` differ or a named variable is unset; when the environment map is set but the config declares none, it WARNs in both modes. On the legacy prose config, a rule's `Host:` line is DEPRECATED, not checked, because there is no configured consumer to compare it with.
 
 ## The consumer kit
 
