@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "fetch-raw": {
+      "command": "uv",
+      "args": ["run", "--quiet", "--script", "--locked", "${CLAUDE_PLUGIN_ROOT}/servers/fetch_raw/server.py"]
+    }
+  }
+}

@@ -7,6 +7,16 @@ What a project that installs this plugin may depend on. Everything listed here k
 - Skills: `research-protocol`, `research-writing`, `run-next-task` (`/run-next-task`), `new-research-project` (`/new-research-project`).
 - Agents, invoked by their plugin-scoped names as `subagent_type`: `research-agent:researcher` (web search and fetch only; launched without the user, project and local `CLAUDE.md` files, so project facts reach it only through the delegation prompt), `research-agent:reviewer` (reads and runs scripts; no web). A project that configures a raw-page fetcher as an MCP server named `firecrawl` makes its search and scrape tools available to the researcher; no other project tool reaches it. A project that needs a different fetch server may place its own `.claude/agents/researcher.md` with `name: researcher`, the same frontmatter and body, and a `tools:` line that names its server's search and scrape tools and nothing else; `/run-next-task` then calls it by the bare name `researcher` in place of the plugin's.
 
+## Raw fetch tool
+
+- The plugin bundles a read-only MCP stdio server, `fetch-raw`, declared in `.mcp.json` and launched with `uv run --script`; it loads whenever the plugin is enabled. Its one tool is callable as `mcp__plugin_research-agent_fetch-raw__fetch_raw`, and the researcher's tool list names it.
+- Arguments: `url`; `offset` (default 0); `max_chars` (default 40000, at most 100000); `route`: `auto` (direct, then Firecrawl when the page is blocked and a key is set), `direct` or `firecrawl`.
+- Return: a header of `key: value` lines, `status` (`OK`, `BLOCKED` or `ERROR`, with the HTTP code), `reason` when not OK, `final_url`, `content_type`, `fetched_at` (UTC), `sha256` (of the body bytes), `route`, `bytes`, `total_chars`, `next_offset` (a number or `none`) and `warnings`; then, for OK only, a `--- content ---` line and the text. HTML text marks superscripts `^[x]` and subscripts `_[x]`; PDF text separates pages with `--- page N ---`.
+- Environment variables, read from the environment Claude Code starts the server with:
+  - `FETCH_RAW_IDENTITY_HOSTS` (optional): comma-separated `host-suffix=ENVVAR` pairs, such as `sec.gov=EDGAR_IDENTITY`. A request to a matching host sends the named variable's value as its User-Agent; no other host receives it, and a matching host is never routed through Firecrawl. A missing variable gives `ERROR`.
+  - `FIRECRAWL_API_KEY` (optional): enables the Firecrawl fallback and `route: firecrawl`.
+- Labels: `raw-fetched` (a value read from `fetch_raw`), next to `snippet` and `summary-fetched`.
+
 ## What the plugin reads from the project
 
 - The `CLAUDE.md` "Research" section, for the paths below.
@@ -37,6 +47,12 @@ It never writes decision records (the decision session does, from the project's 
 - `skills/new-research-project/templates/`: `prompt.md`, `log.md`, `decision-record.md`, `brief.md`, `domain-rules.md`, `queue.md`.
 
 ## Changes to the contract
+
+### 0.5.0
+
+- Added: the bundled `fetch-raw` MCP server and its tool `mcp__plugin_research-agent_fetch-raw__fetch_raw`, with the arguments, header fields and statuses above; the environment variables `FETCH_RAW_IDENTITY_HOSTS` and `FIRECRAWL_API_KEY`; the label `raw-fetched`. The plugin now needs `uv` on the PATH for the tool to start.
+- Changed: the researcher's tool list adds the `fetch_raw` tool; WebFetch stays, for discovery. Decision-critical values come from `fetch_raw` or a second confirmed route; values from WebFetch stay summary-fetched; a BLOCKED result is a dead end.
+- Unchanged: the `firecrawl` server name and its two tool names, the agent file names and every other name, path and shape above.
 
 ### 0.4.1
 
