@@ -25,7 +25,7 @@ A search snippet is not a source. Fetch the page and read the part that supports
 
 Every decision-critical number, date, quotation or rule text comes from `fetch_raw` (raw-fetched) or from a second route that confirms it. `fetch_raw` returns a header (status, final URL, content type, fetch time, sha256 of the body, route) and then the text: HTML as markdown with every table cell kept, superscripts as `^[x]` and subscripts as `_[x]`, PDFs per page. Long documents come in pages: call again with the `next_offset` it returns until it is `none`. Firecrawl's own markdown, parse and JSON outputs are not raw: they merge superscripts into numbers, escape characters or come from a model, so their values are summary-fetched too.
 
-The incident behind the rule: a summary of an exchange calendar invented an early-close date that the page's footnotes did not contain, and the run caught it only by reading the raw page (`takeaways.md`, entry 36).
+The incident behind the rule: a summary of a published calendar invented a date that the page's footnotes did not contain, and the run caught it only by reading the raw page (`takeaways.md`, entry 36).
 
 ## 4. When a page will not open
 
