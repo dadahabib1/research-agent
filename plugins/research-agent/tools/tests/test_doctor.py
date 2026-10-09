@@ -424,3 +424,32 @@ def test_the_plugins_own_kit_passes_check_8(valid):
         shutil.copy(kit / name, valid / ".research-agent" / name)
     report, _ = diagnose(valid, "run")
     assert report.items == []
+
+
+def test_a_project_written_from_the_templates_passes(tmp_path):
+    """New mode's files, with only the placeholders setup fills, give no FAIL."""
+    templates = Path(doctor.__file__).resolve().parents[1] / "skills" / "new-research-project" / "templates"
+    repo, root = tmp_path / "fresh", tmp_path / "fresh" / "docs" / "research"
+    for folder in ("prompts", "logs", "decisions", "templates"):
+        (root / folder).mkdir(parents=True)
+
+    def place(name: str, dest: Path, **values: str) -> None:
+        text = (templates / name).read_text(encoding="utf-8")
+        for key, value in values.items():
+            text = text.replace(key, value)
+        dest.write_text(text, encoding="utf-8")
+
+    config = (templates / "research-agent.toml").read_text(encoding="utf-8")
+    config = config.split("[consumes]")[0].replace("<who accepts, rejects or defers decisions, for example requester>", "requester")
+    config = config.replace('name = "<consumer name>"', 'name = "demo"')
+    (repo / "research-agent.toml").write_text(config, encoding="utf-8")
+    place("brief.md", root / "research-brief.md", **{"<root>": "docs/research"})
+    place("domain-rules.md", root / "domain-rules.md")
+    place("queue.md", root / "research-queue.md")
+    place("decision-index.md", root / "decisions" / "INDEX.md")
+    place("consumer-context.md", root / "consumer-context.md")
+    place("prompt.md", root / "templates" / "prompt.md")
+    (repo / "CLAUDE.md").write_text("## Research\n\nResearch config: `research-agent.toml`.\n", encoding="utf-8")
+    (repo / ".gitignore").write_text("__pycache__/\n*.pyc\n", encoding="utf-8")
+    report, _ = diagnose(repo, "setup")
+    assert report.items == [], report.items
