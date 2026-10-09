@@ -341,3 +341,14 @@ def test_help_explains_every_report_and_its_action(tmp):
     assert out.stdout.count("Action:") >= 7
     for usage in ("--hash decision <record path> <decision-name>", "--hash rule <rule-id>", "--no-fetch", "--ref"):
         assert usage in out.stdout
+
+
+def test_malformed_research_config_is_a_setup_error(tmp):
+    research = research_repo(tmp)
+    host = pin_all(tmp, research, ["d-one"])
+    commit(research, {"research-agent.toml": "requires = [\n"})
+    for args in (("--no-fetch",), ("--no-fetch", "--hash", "decision", "research/decisions/topic-2026-10-01.md", "d-one")):
+        out = drift(host, *args)
+        assert out.returncode == 2, out.stdout + out.stderr
+        assert "research-agent.toml on origin/main does not parse" in out.stdout
+        assert "Traceback" not in out.stderr

@@ -1,4 +1,4 @@
-# research-agent 0.6.0 sha256:06749410a657e7d481c7110379dbe672a7bf381049b1bfc9b853136b34a8ba0d
+# research-agent 0.6.0 sha256:feff53aca2c21d52b1c6356e654a9aba3b109e2176d27353e2a6f0662e130af8
 # /// script
 # requires-python = ">=3.11"
 # dependencies = []
@@ -227,6 +227,10 @@ def own_version() -> str | None:
     return match.group(1) if match else None
 
 
+class SetupError(Exception):
+    """A setup problem: exit code 2."""
+
+
 def research_layout(research: Path) -> tuple[str | None, list[str]]:
     """Set DECISIONS and RULES from the research repository's config on REF.
     Returns the consumer name it declares and any notices."""
@@ -236,7 +240,10 @@ def research_layout(research: Path) -> tuple[str | None, list[str]]:
         DECISIONS, RULES = f"{LEGACY_ROOT}/decisions", f"{LEGACY_ROOT}/domain-rules.md"
         return None, [f"DEPRECATED {research} has no {CONFIG} on {REF}; reading {LEGACY_ROOT}/ "
                       "(removed in 0.7.0)"]
-    project = tomllib.loads(text).get("project", {})
+    try:
+        project = tomllib.loads(text).get("project", {})
+    except tomllib.TOMLDecodeError:
+        raise SetupError(f"{research}: {CONFIG} on {REF} does not parse") from None
     root = project.get("root", LEGACY_ROOT).strip("/")
     DECISIONS, RULES = f"{root}/decisions", f"{root}/domain-rules.md"
     return (project.get("consumer") or {}).get("name"), []
@@ -291,7 +298,11 @@ def main() -> int:
     except subprocess.CalledProcessError as exc:
         print(f"git failed in {research}: {exc.stderr.strip()} (pass --no-fetch, or --ref)")
         return 2
-    consumer, notices = research_layout(research)
+    try:
+        consumer, notices = research_layout(research)
+    except SetupError as exc:
+        print(exc)
+        return 2
     version, requires = own_version(), config.get("requires")
     if version and isinstance(requires, str) and not in_range(version, requires):
         notices.append(f'WARN     this kit is research-agent {version}, outside requires = "{requires}"; '
