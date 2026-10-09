@@ -1,6 +1,6 @@
 # Consumer contract
 
-What a project that installs this plugin may depend on. Everything listed here keeps its name, path and shape within a minor version; a change to any of it bumps the minor version and is recorded under "Changes to the contract". Everything not listed (reference files and their headings, template wording, agent bodies) may change in any version.
+What a project that installs this plugin may depend on. Everything listed here keeps its name, path and shape within a minor version; a change to any of it bumps the minor version and is recorded in `CHANGELOG.md`, under its release's "Contract" subsection. Everything not listed (reference files and their headings, template wording, agent bodies) may change in any version.
 
 ## Skills and agents
 
@@ -45,23 +45,3 @@ It never writes decision records (the decision session does, from the project's 
 - `skills/research-protocol/references/review.md`: the heading "Revision".
 - `skills/research-writing/SKILL.md`: the heading "Writing for an implementing agent".
 - `skills/new-research-project/templates/`: `prompt.md`, `log.md`, `decision-record.md`, `brief.md`, `domain-rules.md`, `queue.md`.
-
-## Changes to the contract
-
-### 0.5.0
-
-- Added: the bundled `fetch-raw` MCP server and its tool `mcp__plugin_research-agent_fetch-raw__fetch_raw`, with the arguments, header fields and statuses above; the environment variables `FETCH_RAW_IDENTITY_HOSTS` and `FIRECRAWL_API_KEY`; the label `raw-fetched`. The plugin now needs `uv` on the PATH for the tool to start.
-- Changed: the researcher's tool list adds the `fetch_raw` tool; WebFetch stays, for discovery. Decision-critical values come from `fetch_raw` or a second confirmed route; values from WebFetch stay summary-fetched; a BLOCKED result is a dead end.
-- Unchanged: the `firecrawl` server name and its two tool names, the agent file names and every other name, path and shape above.
-
-### 0.4.1
-
-- Clarified: the agents are invoked by their plugin-scoped names, `research-agent:researcher` and `research-agent:reviewer`, as Claude Code registers plugin agents; 0.4.0 said bare names. A project's own `.claude/agents/researcher.md` still replaces the plugin's researcher, now because `/run-next-task` calls the bare name `researcher` when the project defines one.
-- Changed: the researcher sets `omitClaudeMd: true`, so the user, project and local `CLAUDE.md` files no longer reach it (requires Claude Code v2.1.271 or later; older versions ignore the field). Managed policy files and the git status snapshot still do.
-- Unchanged: agent file names, tool lists, the `firecrawl` server name and every other name, path and shape above.
-
-### 0.4.0
-
-- Added: the optional prompt lines `Shape:` and `Run settings:`; the log sections Frame and plan, Flagged content, Self-review, Review findings and Spend, and the header lines Shape and Fetch tools; the notes files; the optional decision-record field Reopen when; `templates/domain-rules.md`; the brief's §6 "Domain rules" pointer.
-- Changed: the queue selection rule is table order (0.3.x: lowest-numbered prompt). The researcher agent is read-only (web search and fetch); the reviewer has no web access. `references/finance.md` is removed; domain rules belong to the project.
-- Unchanged: skill names, queue statuses and columns, the decision-record heading and field names, brief section numbers, the log path, the branch name, and the cited headings.
