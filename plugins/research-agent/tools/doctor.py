@@ -563,7 +563,7 @@ def check_kit(repo: Path, requires: str | None, report: Report) -> None:
 
 def identity_map(value: str) -> dict[str, str] | None:
     """FETCH_RAW_IDENTITY_HOSTS parsed as fetch_raw parses it; None when malformed."""
-    rules = {}
+    pairs = {}
     for item in value.split(","):
         item = item.strip()
         if not item:
@@ -571,8 +571,8 @@ def identity_map(value: str) -> dict[str, str] | None:
         suffix, sep, var = (x.strip() for x in item.partition("="))
         if not sep or not suffix or not var:
             return None
-        rules[suffix.lower().strip(".")] = var
-    return rules
+        pairs[suffix.lower().strip(".")] = var
+    return pairs
 
 
 def check_environment(project: dict, mode: str, report: Report) -> None:
