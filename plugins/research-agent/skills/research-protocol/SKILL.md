@@ -5,14 +5,15 @@ description: Protocol for research runs in a project that keeps a research brief
 
 # Research protocol
 
-A research run turns a question into evidence a decision-maker can act on. This protocol keeps every run consistent, whatever the topic: the same intake, standards, verification and review. Domain rules belong to the project, in the file its brief §6 points to; the plugin holds only general rules.
+A research run turns a question into evidence a decision-maker can act on. This protocol keeps every run consistent, whatever the topic: the same intake, standards, verification and review. Domain rules belong to the project, in the file its brief §6 points to; the plugin holds only general rules. The project's `research-agent.toml` names where its research lives (`project.root`) and who decides (`project.decider`); the plugin's `CONTRACT.md` fixes the layout and formats under it.
 
 ## Roles
 
-- **The requester** owns decisions: scope, money, risk, and every judgment call.
-- **The researcher** owns facts: finding, verifying and grading them. Look up what can be looked up. Ask the requester only for decisions, and for facts about their own situation.
+- **The requester** asks the question and owns the facts about their own situation.
+- **The decider**, named by `project.decider` in the config (the requester unless it says otherwise), owns decisions: scope, money, risk, and every judgment call. Only the decider accepts, rejects or defers a decision, in a decision session; a run proposes.
+- **The researcher** owns facts: finding, verifying and grading them. Look up what can be looked up. Ask only for decisions (the decider) and for facts about the requester's own situation (the requester).
 - **A reviewer** (a person or a second agent) checks the deliverable before any decision is made.
-- **The project** owns its brief, its domain rules and its queue. The protocol reads them and writes only into the project.
+- **The project** owns its config, its brief, its domain rules and its queue. The protocol reads them and writes only into the project.
 
 ## Run shapes
 
@@ -64,11 +65,14 @@ Work the steps in order, to the depth the shape sets. Each ends on a completion 
 8. **Self-review.** Run the checklist in `references/review.md` and record the result in the log.
    Done when every item passes or is listed as open.
 
-9. **Hand over.** Deliver for review, with the researcher's sweep for newer editions and contrary evidence. Then hold a decision session (`references/questioning.md`) in which the requester accepts, rejects or defers each decision.
+9. **Hand over.** Deliver for review, with the researcher's sweep for newer editions and contrary evidence. Then hold a decision session (`references/review.md`, "Decision session") in which the decider accepts, rejects or defers each decision.
    Done when the decisions are recorded. Only accepted decisions move on to spec or action.
 
-10. **Revise and learn.** Answer each review item in a change log, return the complete document, and update fixtures with any rule change. Write each new failure mode as a candidate takeaway (rule, incident, check) in the change log and the pull request. The plugin's `references/takeaways.md` is maintained by the plugin's maintainer from those candidates; a run never edits it.
-    Done when the change log maps every review item to a resolution and lists the candidate takeaways.
+10. **Revise and learn.** Answer each review item in a change log, return the complete document, and update fixtures with any rule change. Write each new failure mode as a lesson candidate (rule, incident, check), scoped:
+    - **`[tool]`:** about how research is done in any field. It goes in the hand-back, and the host files it as an issue labelled `lesson` on the plugin's repository. The plugin's maintainer decides whether it enters `references/takeaways.md`; a run never edits it.
+    - **`[field]`:** about this project's field. It goes in the hand-back and in the deliverable's "Changes to existing decisions or methods" section, as a proposed domain rule with its ID (an existing one, or "new"). The decider accepts or rejects it in the decision session; a run never edits the domain rules.
+
+    Done when the change log maps every review item to a resolution and the hand-back lists the lesson candidates, each scoped.
 
 ## Core rules
 
@@ -101,5 +105,5 @@ Each rule's incident and check are in `references/takeaways.md`.
 - `references/review.md`: self-review and reviewer checklists, revision rules and the decision session. Read at steps 8 to 10.
 - `references/takeaways.md`: rules learned from past runs, each with its incident and check. Read at the start of every run.
 - `references/effort-and-cost.md`: model, effort and cost settings. Read at step 1.
-- The project's domain rules, named in its brief §6 and written from the `new-research-project` skill's `templates/domain-rules.md`. Read at steps 2 to 7.
+- The project's domain rules, named in its brief §6 and written from the `new-research-project` skill's `templates/domain-rules.md`, one `###` rule per ID. Cite rules by ID; record each question group's rules in the log's Applied rules table. Read at steps 2 to 7.
 - The research-writing skill: the writing standard for deliverables, briefs, prompts and reviews. Read at step 7, and whenever writing for the requester or another agent.
