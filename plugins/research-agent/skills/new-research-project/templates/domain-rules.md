@@ -77,8 +77,8 @@ Costs, minimum sizes, sample sizes, time to result and other constraints that ch
 
 > ILLUSTRATIVE (education):
 >
-> ### effect-detectable-at-class-count: A proposed evaluation states the smallest effect it can detect at the requester's number of classes, from a power calculation.
-> - Check: every proposed evaluation shows its power calculation and the class count it assumes.
+> ### effect-detectable-at-class-count: A proposed study of a teaching method states the smallest effect it can detect at the requester's number of classes, from a power calculation.
+> - Check: every proposed study shows its power calculation and the class count it assumes.
 > - Scope: decision-critical
 > - Source: requester, <date>
 > - Added: <date>
