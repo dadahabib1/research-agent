@@ -69,7 +69,7 @@ Work the steps in order, to the depth the shape sets. Each ends on a completion 
    Done when the decisions are recorded. Only accepted decisions move on to spec or action.
 
 10. **Revise and learn.** Answer each review item in a change log, return the complete document, and update fixtures with any rule change. Write each new failure mode as a lesson candidate (rule, incident, check), scoped:
-    - **`[tool]`:** about how research is done in any field. It goes in the hand-back, and the host files it as an issue labelled `lesson` on the plugin's repository. The plugin's maintainer decides whether it enters `references/takeaways.md`; a run never edits it.
+    - **`[tool]`:** about how research is done in any field. Write its rule, incident and check in field-neutral words, as in `references/takeaways.md`: the mechanism alone, so that an agent in another project, with none of this project's files, can understand and apply it, and the issue it becomes on the plugin's public repository carries no project names, data, sources or decisions. It goes in the hand-back, and the host files it as an issue labelled `lesson` on the plugin's repository. The plugin's maintainer decides whether it enters `references/takeaways.md`; a run never edits it.
     - **`[field]`:** about this project's field. It goes in the hand-back and in the deliverable's "Changes to existing decisions or methods" section, as a proposed domain rule with its ID (an existing one, or "new"). The decider accepts or rejects it in the decision session; a run never edits the domain rules.
 
     Done when the change log maps every review item to a resolution and the hand-back lists the lesson candidates, each scoped.

@@ -137,7 +137,7 @@ Every run ends with this block, as the last section of the pull request body and
 - Flagged content:
   - <URL>: <what the text tried to do> | none
 - Lesson candidates:
-  - [tool] <rule>. Incident: <what happened in this run>. Check: <how a reviewer verifies it>.
+  - [tool] <rule>. Incident: <what happened in this run, in field-neutral words>. Check: <how a reviewer verifies it>.
   - [field] <rule ID, or "new">: <proposed rule>. Incident: <…>. Check: <…>.
 - Spend: <tokens or cost>; model <model>; effort <level>
 - Paths: deliverable `<path>`; log `<path>`; notes `<paths>`; scripts `<paths>`; branch `research/<topic>`; pull request <URL | none>

@@ -1,4 +1,4 @@
-<!-- research-agent 0.6.0 sha256:d3efaf130c44099e91a6cd58856f8addd2d5816bab2fdb290d3c1731d23ecf9f -->
+<!-- research-agent 0.6.0 sha256:7fc962cd32264ed95b0e36f3ce01fb830a343e4fe4bc646d83034cbb59462ce4 -->
 # Adopting research-agent (contract 0.6)
 
 research-agent runs research projects: questions that need cited evidence and checked numbers before someone decides, answered under a fixed protocol that ends in a pull request and a decision session. Use it for those; answer quick lookups yourself.
@@ -10,4 +10,4 @@ research-agent runs research projects: questions that need cited evidence and ch
 5. **Keep it current.**
    - **Pins.** When your work starts relying on an accepted decision, or on a domain rule whose `Host:` names you, add it to `docs/research-lock.md` with the hash from `.research-agent/research_drift.py --hash`. Run `.research-agent/research_drift.py` at startup and before writing a spec; `--help` gives the action for each report.
    - **Context.** Keep the consumer context file true to what your system can do today.
-   - **Lessons.** File each `[tool]` lesson candidate as an issue on the plugin's repository with the label `lesson`. `[field]` candidates reach the domain rules through the decision session.
+   - **Lessons.** File each `[tool]` lesson candidate as an issue on the plugin's repository with the label `lesson`. That repository is public and serves every project, so first check that the candidate reads without your project's files and names nothing from it; reword it in field-neutral words where it does not. `[field]` candidates reach the domain rules through the decision session.
