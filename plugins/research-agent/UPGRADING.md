@@ -16,7 +16,7 @@ What changes for a project between plugin versions, and what to do about it. `CO
    - a list of proposed content changes and of steps only a person can take.
    Done when the doctor reports no FAIL.
 3. **Rule IDs.** By pull request, convert each domain-rules bullet to the rule format: a `### <rule-id>: <rule>` subsection with Check, Scope, Source and Added lines, and `Host: <consumer>` only on rules the consumer's code implements and no accepted decision already states. Add the template's three preamble rules (precedence, the change rule, "decision-critical") if they are missing. Until this merges, the doctor reports check 4b as DEPRECATED.
-4. **Prompts not yet run.** Replace rules retyped into prompts with their rule IDs (`templates/prompt.md`, the Standards line). Leave results, logs and accepted records alone.
+4. **Prompts not yet run.** Where a prompt retypes a domain rule, cite its rule ID instead (`templates/prompt.md`, the Standards line). Leave results, logs and accepted records alone.
 5. **Environment.** Set every variable `[project.fetch_identity]` names, and `FETCH_RAW_IDENTITY_HOSTS` to the same map, wherever runs happen: `/run-next-task` now stops at step 0 when they differ or one is unset. Other `env` names only warn.
 6. **Decision headers.** Each decision opens with a `yaml` block with at least `name`, `status`, `decided`, `decided_by`, `depends_on`, `supersedes` and `parameters`, and `decisions/INDEX.md` has a row per decision with the same name and status. The doctor fails on a mismatch. A project template that adds keys stays as an override in `<root>/templates/`.
 
