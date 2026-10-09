@@ -1,8 +1,23 @@
 # Changelog
 
-Every change to the plugin, by release. A pull request adds a line under `## Unreleased` and leaves the version alone. A release pull request moves those lines under `## X.Y.Z (date)`, sets `version` in `.claude-plugin/plugin.json` and updates `UPGRADING.md`; after its merge the merge commit is tagged `vX.Y.Z`, and the tag is never moved. Each release's "Contract" subsection records what changed in `CONTRACT.md`; `UPGRADING.md` says what a project does about it.
+Every change to the plugin, by release. A pull request adds a line under `## Unreleased` and leaves the version alone. A release pull request moves those lines under `## X.Y.Z (date)`, sets `version` in `.claude-plugin/plugin.json`, updates `UPGRADING.md` and restamps the kit (`python tools/stamp_kit.py`); after its merge the merge commit is tagged `vX.Y.Z`, and the tag is never moved. Each release's "Contract" subsection records what changed in `CONTRACT.md`; `UPGRADING.md` says what a project does about it.
 
 ## Unreleased
+
+## 0.6.0 (2026-10-09)
+
+One config file, a setup skill that adopts and checks, a consumer kit, a fixed hand-back, releases, and domain rules with IDs. The research protocol itself is unchanged, and `fetch_raw` is unchanged. Design: `docs/design/0.6.0.md`.
+
+- Added: `research-agent.toml`, read by every skill; `tools/doctor.py`, run last by setup and at `/run-next-task` step 0; the consumer kit `kit/INTEGRATION.md` and `kit/research_drift.py`, copied into hosts with a version and content-hash stamp (`tools/stamp_kit.py` writes the stamps); templates for the config, the decision index, the consumer context file, the research pull request and the lock.
+- Changed: `/new-research-project` detects its mode (new, adopt, consumer), writes only what is missing, routes its interview through a host, and ends with the doctor. `/run-next-task` takes its paths from the config, records the Applied rules, scopes lessons as `[tool]` or `[field]`, and ends with the `## Hand-back` block. The decider replaces the requester as the one who decides. The reviewer checks the Applied rules table. Finance examples left every file a run reads (takeaways, intake, standards, searching, prompt writing, the domain-rules template, the research-writing skill).
+- Packaging: `plugin.json` gains `license`, `repository` and `homepage`; `LICENSE` is inside the plugin; the marketplace entry no longer carries a version.
+
+### Contract
+
+- Added: the config schema (`requires`, `[project]`, `[project.consumer]`, `[project.fetch_identity]`, `[project.run_defaults]`, `[consumes]`); the fixed layout under `root` and `<topic>`; the brief's nine and the domain rules' eight numbered headings; the rule format with IDs; the decision header's core keys and the index; the Applied rules table; the hand-back; the hand-over with its no-remote fallback; the lock format with a "Pinned rules" table; the kit's paths, command lines, reports and exit codes; the doctor's command line and exit codes; the version range rule and the release rules.
+- Changed: the brief's default name is `research-brief.md` (was `strategy-research-brief.md`; `project.brief` keeps the old name); decision records open each decision with a `yaml` header block; statuses for decisions add `superseded` and `withdrawn`; the queue allows extra columns.
+- Deprecated in 0.6.0, removed in 0.7.0: paths read from the `CLAUDE.md` "Research" section instead of `research-agent.toml`; domain rules written as bullets without an ID.
+- Unchanged: skill and agent names, the `fetch_raw` tool and its arguments and returns, `FETCH_RAW_IDENTITY_HOSTS` as the server's only identity input, queue statuses and the selection rule, the log path and the branch name.
 
 ## 0.5.0 (2026-10-09)
 
