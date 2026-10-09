@@ -27,7 +27,7 @@ What changes in runs: the log header records the config line and the doctor's it
 ### A consumer (consumer mode)
 
 1. Enable the plugin pinned to `v0.6.0` and run `/new-research-project`. It detects consumer mode and writes a `[consumes]` table, `.research-agent/INTEGRATION.md` and `.research-agent/research_drift.py` (copied with their stamps), and `docs/research-lock.md` or, where it exists, its empty "Pinned rules" table.
-2. **Check hash parity before deleting anything.** `python .research-agent/research_drift.py --no-fetch` must report no drift on the rows your own drift script passes today. The kit keeps the hash function, so existing hashes stay valid.
+2. **Check hash parity before deleting anything.** `python .research-agent/research_drift.py --no-fetch` must report no drift on the rows your own drift script passes today. The kit keeps the hash function and reads git output as UTF-8. If your script decoded it another way (Python's default on Windows is cp1252), rows with non-ASCII text report `CHANGED` once: confirm with the printed `git diff` that each decision is unchanged since its pinned commit, then re-pin it with `--hash`.
 3. Retire your own drift script and its documentation, and point your `CLAUDE.md` and every reference to them at `.research-agent/INTEGRATION.md` and `.research-agent/research_drift.py`.
 4. Pin a domain rule whose `Host:` names you once the research project has rule IDs (`--hash rule <rule-id>`).
 5. Do not edit the kit's files: the doctor compares each file with its stamp. To upgrade the kit, run `/new-research-project` again after pinning the new release.

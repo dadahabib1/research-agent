@@ -1,4 +1,4 @@
-"""The drift tool: hash parity with the app's lock on equity's real decision records, rule pins,
+"""The drift tool: UTF-8 hashes of equity's real decision records and the app's one re-pin, rule pins,
 research = "self", the legacy fallback, every report code, exit codes, the stamp and --help."""
 
 import hashlib
@@ -24,7 +24,7 @@ def lock_hashes(text: str) -> list[tuple[str, str, str]]:
     return rows
 
 
-# ---------- hash parity with equity_analyst_v2's lock ----------
+# ---------- equity's decisions and equity_analyst_v2's lock ----------
 
 def equity_clone(tmp: Path) -> Path:
     research = init(tmp / "equity_research")
@@ -34,23 +34,41 @@ def equity_clone(tmp: Path) -> Path:
     return research
 
 
-def test_hash_parity_with_the_apps_lock(tmp):
+def utf8_hash(record: str, name: str) -> str:
+    """The contract's hash, computed here independently of the kit: the decision's subsection of the
+    record read as UTF-8, lines right-stripped, joined with \\n, sha256, first 12 hex characters."""
+    text = (EQUITY / "decisions" / Path(record).name).read_text(encoding="utf-8").replace("\r\n", "\n")
+    lines = text.split("\n")
+    start = next(i for i, line in enumerate(lines) if line.startswith(f"### {name}:"))
+    end = next((i for i in range(start + 1, len(lines)) if lines[i].startswith(("### ", "## "))), len(lines))
+    body = "\n".join(line.rstrip() for line in lines[start:end]).strip("\n")
+    return hashlib.sha256(body.encode("utf-8")).hexdigest()[:12]
+
+
+def test_hashes_equity_decisions_as_utf8(tmp):
     research = equity_clone(tmp)
     app_lock = (EQUITY / "research-lock.md").read_text(encoding="utf-8")
     rows = lock_hashes(app_lock)
     assert len(rows) == 12
     host = make_host(tmp / "equity_analyst_v2", REQUIRES + APP_CONSUMES, app_lock)
-    for name, record, expected in rows:
+    for name, record, _ in rows:
         out = drift(host, "--no-fetch", "--hash", "decision", record, name)
         assert out.returncode == 0, out.stdout + out.stderr
-        assert out.stdout.strip() == expected, name
+        assert out.stdout.strip() == utf8_hash(record, name), name
 
 
-def test_the_apps_12_rows_report_no_drift_on_the_legacy_fallback(tmp):
-    """Migration §13, step 2: the kit reports no drift on the rows the app's script passes today."""
+def test_the_apps_12_rows_need_one_re_pin_on_the_legacy_fallback(tmp):
+    """Migration §13, step 2: the app's script hashed git output decoded as cp1252 (Python's default on
+    Windows), so its 12 rows report CHANGED once; re-pinned with --hash, they report no drift."""
     equity_clone(tmp)
-    host = make_host(tmp / "equity_analyst_v2", REQUIRES + APP_CONSUMES,
-                     (EQUITY / "research-lock.md").read_text(encoding="utf-8"))
+    app_lock = (EQUITY / "research-lock.md").read_text(encoding="utf-8")
+    host = make_host(tmp / "equity_analyst_v2", REQUIRES + APP_CONSUMES, app_lock)
+    out = drift(host, "--no-fetch")
+    assert out.returncode == 1, out.stdout + out.stderr
+    assert sum(line.startswith("CHANGED") for line in out.stdout.splitlines()) == 12
+    for name, record, old in lock_hashes(app_lock):
+        app_lock = app_lock.replace(old, hash_of(host, "decision", record, name), 1)
+    write(host, {"docs/research-lock.md": app_lock})
     out = drift(host, "--no-fetch")
     assert out.returncode == 0, out.stdout + out.stderr
     lines = out.stdout.strip().splitlines()
@@ -142,6 +160,17 @@ def pin_all(tmp, research, decision_names=(), rule_ids=()) -> Path:
 
 def reports(out) -> list[str]:
     return [line for line in out.stdout.splitlines() if line.strip()]
+
+
+def test_hashes_non_ascii_text_as_utf8_on_every_platform(tmp):
+    """A pin made on one machine must match on another, whatever its default encoding."""
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("drift", KIT / "research_drift.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    research = research_repo(tmp, [("unit-rule", "Readings at or above 15 µg/m³ in Łódź count.", "app", False)])
+    doc = (research / "research/domain-rules.md").read_text(encoding="utf-8")
+    assert hash_of(host_for(tmp, research), "rule", "unit-rule") == mod.content_hash(mod.section(doc, "unit-rule"))
 
 
 # ---------- rule pins ----------

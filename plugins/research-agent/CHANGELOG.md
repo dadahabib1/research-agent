@@ -10,6 +10,7 @@ One config file, a setup skill that adopts and checks, a consumer kit, a fixed h
 
 - Added: `research-agent.toml`, read by every skill; `tools/doctor.py`, run last by setup and at `/run-next-task` step 0; the consumer kit `kit/INTEGRATION.md` and `kit/research_drift.py`, copied into hosts with a version and content-hash stamp (`tools/stamp_kit.py` writes the stamps); templates for the config, the decision index, the consumer context file, the research pull request and the lock.
 - Changed: `/new-research-project` detects its mode (new, adopt, consumer), writes only what is missing, routes its interview through a host, and ends with the doctor. `/run-next-task` takes its paths from the config, records the Applied rules, scopes lessons as `[tool]` or `[field]`, and ends with the `## Hand-back` block. The decider replaces the requester as the one who decides. The reviewer checks the Applied rules table. Finance examples left every file a run reads (takeaways, intake, standards, searching, prompt writing, the domain-rules template, the research-writing skill).
+- Fixed: the drift tool reads git output as UTF-8, as the contract's hash requires; it used the platform's default encoding, so hashes differed between Windows and Linux, and non-ASCII text could crash `--hash`. Hosts whose own script hashed on Windows re-pin once (`UPGRADING.md`).
 - Packaging: `plugin.json` gains `license`, `repository` and `homepage`; `LICENSE` is inside the plugin; the marketplace entry no longer carries a version.
 
 ### Contract

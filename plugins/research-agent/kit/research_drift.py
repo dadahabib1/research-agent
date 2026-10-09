@@ -1,4 +1,4 @@
-# research-agent 0.6.0 sha256:feff53aca2c21d52b1c6356e654a9aba3b109e2176d27353e2a6f0662e130af8
+# research-agent 0.6.0 sha256:91c781f3d7937dcd59bd8c737e93e3bc4609bdc456ed9c1847d633bda53663ec
 # /// script
 # requires-python = ">=3.11"
 # dependencies = []
@@ -71,7 +71,7 @@ branches, open pull requests and drafts are context."""
 
 def git(research: Path, *args: str) -> str:
     return subprocess.run(
-        ["git", "-C", str(research), *args], capture_output=True, text=True, check=True
+        ["git", "-C", str(research), *args], capture_output=True, text=True, encoding="utf-8", check=True
     ).stdout
 
 
