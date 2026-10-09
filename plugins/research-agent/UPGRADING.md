@@ -1,6 +1,36 @@
 # Upgrading
 
-What changes for a project between plugin versions, and what to do about it. `CONTRACT.md` lists what stays fixed within a minor version.
+What changes for a project between plugin versions, and what to do about it. `CONTRACT.md` lists the current contract; `CHANGELOG.md` lists every change by release.
+
+## 0.5.x to 0.6.0
+
+0.6.0 adds one config file, a doctor, a consumer kit, a fixed hand-back and rule IDs. A research project without the config keeps working on the 0.5.0 reading of its `CLAUDE.md` "Research" section, with DEPRECATED notices, until 0.7.0 removes that fallback. Nothing a project wrote before needs editing to keep running, and no accepted decision record is touched.
+
+### A research project (adopt mode)
+
+1. **Pin the release.** In `.claude/settings.json`, give the marketplace source `"ref": "v0.6.0"` (README, "Install"). In a cloud environment, start the setup script with `PLUGIN_REF=v0.6.0` and use it in the install and pre-warm lines (README, "Claude Code cloud sessions"). Until the next step, runs use the legacy fallback.
+2. **Run `/new-research-project`.** It detects adopt mode and, after you confirm, writes:
+   - `research-agent.toml`, matching your files: `root`, `brief` (keep your brief's file name; the new default is `research-brief.md`), `decider`, the consumer and its context file, `env`, and `[project.fetch_identity]` where your domain rules send an identity to a host;
+   - the `CLAUDE.md` pointer to the config, in place of the path list (your own rules stay);
+   - any missing file new mode writes: `<root>/templates/prompt.md`, `.gitignore` lines for `__pycache__/` and `*.pyc`, `.github/pull_request_template.md`;
+   - a list of proposed content changes and of steps only a person can take.
+   Done when the doctor reports no FAIL.
+3. **Rule IDs.** By pull request, convert each domain-rules bullet to the rule format: a `### <rule-id>: <rule>` subsection with Check, Scope, Source and Added lines, and `Host: <consumer>` only on rules the consumer's code implements and no accepted decision already states. Add the template's three preamble rules (precedence, the change rule, "decision-critical") if they are missing. Until this merges, the doctor reports check 4b as DEPRECATED.
+4. **Prompts not yet run.** Where a prompt retypes a domain rule, cite its rule ID instead (`templates/prompt.md`, the Standards line). Leave results, logs and accepted records alone.
+5. **Environment.** Set every variable `[project.fetch_identity]` names, and `FETCH_RAW_IDENTITY_HOSTS` to the same map, wherever runs happen: `/run-next-task` now stops at step 0 when they differ or one is unset. Other `env` names only warn.
+6. **Decision headers.** Each decision opens with a `yaml` block with at least `name`, `status`, `decided`, `decided_by`, `depends_on`, `supersedes` and `parameters`, and `decisions/INDEX.md` has a row per decision with the same name and status. The doctor fails on a mismatch. A project template that adds keys stays as an override in `<root>/templates/`.
+
+Done when the doctor shows no FAIL after step 2 and no DEPRECATED after step 3.
+
+What changes in runs: the log header records the config line and the doctor's items; the log gains an Applied rules table; lesson candidates are scoped `[tool]` or `[field]`; the pull request and the session end with the `## Hand-back` block (`CONTRACT.md`); with no remote, the run commits on its branch and says `pull request: none`.
+
+### A consumer (consumer mode)
+
+1. Enable the plugin pinned to `v0.6.0` and run `/new-research-project`. It detects consumer mode and writes a `[consumes]` table, `.research-agent/INTEGRATION.md` and `.research-agent/research_drift.py` (copied with their stamps), and `docs/research-lock.md` or, where it exists, its empty "Pinned rules" table.
+2. **Check hash parity before deleting anything.** `python .research-agent/research_drift.py --no-fetch` must report no drift on the rows your own drift script passes today. The kit keeps the hash function and reads git output as UTF-8. If your script decoded it another way (Python's default on Windows is cp1252), rows with non-ASCII text report `CHANGED` once: confirm with the printed `git diff` that each decision is unchanged since its pinned commit, then re-pin it with `--hash`.
+3. Retire your own drift script and its documentation, and point your `CLAUDE.md` and every reference to them at `.research-agent/INTEGRATION.md` and `.research-agent/research_drift.py`.
+4. Pin a domain rule whose `Host:` names you once the research project has rule IDs (`--hash rule <rule-id>`).
+5. Do not edit the kit's files: the doctor compares each file with its stamp. To upgrade the kit, run `/new-research-project` again after pinning the new release.
 
 ## 0.4.x to 0.5.0
 

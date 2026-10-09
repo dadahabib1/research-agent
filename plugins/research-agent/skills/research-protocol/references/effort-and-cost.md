@@ -18,7 +18,7 @@
 - **Research and synthesis runs** (agentic and long): xhigh, or high when cost matters more.
 - **Independent review:** high.
 - **Extraction, formatting and log tidying:** medium or low, only after checking quality on a sample.
-- Set effort in the researcher and reviewer subagent definitions, so every run gets it.
+- The plugin's subagents carry their effort in their definitions, so every run gets it: the researcher runs at xhigh and the reviewer at high, both on the session's model. A run's log header takes them from this line.
 
 ## Model
 

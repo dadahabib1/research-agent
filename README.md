@@ -1,6 +1,6 @@
 # research-agent
 
-A Claude Code plugin that a project installs to run evidence-based research tasks: a protocol, a session loop that runs one queued task per session and ends in a pull request, and two subagents. It is a tool. It reads a project's brief, domain rules and queue, and writes only into that project's repository: the deliverable, a log, scripts, a queue status and a pull request. It never writes to its own files, never merges, and never records a decision; a person does that in the project's decision session.
+A Claude Code plugin that a project installs to run evidence-based research tasks: a protocol, a session loop that runs one queued task per session and ends in a pull request, and two subagents. It is a tool. A project describes itself in one config file, `research-agent.toml`; the plugin reads it with the project's brief, domain rules and queue, and writes only into that project's repository: the deliverable, a log, scripts, a queue status and a pull request. It never writes to its own files, never merges, and never records a decision; a person does that in the project's decision session.
 
 ## Contents
 
@@ -8,32 +8,45 @@ A Claude Code plugin that a project installs to run evidence-based research task
   - `research-protocol`: intake, framing, evidence by claim type, verification of numbers in code, review, decision session;
   - `research-writing`: the writing standard for deliverables, prompts and reviews;
   - `run-next-task` (invoked as /run-next-task): the session loop;
-  - `new-research-project` (invoked as /new-research-project): scaffolds a project's `docs/research/`, brief, domain rules and queue.
+  - `new-research-project` (invoked as /new-research-project): sets a repository up in one of three modes (new, adopt or upgrade, consumer) and ends with the doctor.
+- **Doctor:** `tools/doctor.py`, which compares the config with the files and stops a run on any mismatch.
+- **Consumer kit:** `kit/INTEGRATION.md` (the integration prompt a host follows) and `kit/research_drift.py` (the drift check on pinned decisions and rules), copied into a host's `.research-agent/` by setup.
 - **Agents:** `researcher` (web search and fetch only; effort xhigh) and `reviewer` (reads and runs scripts; no web; effort high).
 - **Raw fetch tool:** `fetch_raw`, a bundled read-only MCP server (`plugins/research-agent/servers/fetch_raw/`) that returns a page's own text, not a summary. See "Raw page fetcher" below.
 - **`plugins/research-agent/CONTRACT.md`**: the names, paths and shapes a project may depend on.
 - **`plugins/research-agent/UPGRADING.md`**: what changes between versions and what a project should do.
+- **`plugins/research-agent/CHANGELOG.md`**: every change by release, with each release's contract changes.
 
 ## Install
 
-- **In one project:** add this to the project's `.claude/settings.json`:
+Pin a release tag; `/new-research-project` writes this for you.
+
+- **In one project:** add this to the project's `.claude/settings.json`, with the tag the project uses:
 
 ```json
 {
   "extraKnownMarketplaces": {
-    "personal-agents": { "source": { "source": "github", "repo": "dadahabib1/research-agent" } }
+    "personal-agents": { "source": { "source": "github", "repo": "dadahabib1/research-agent", "ref": "v0.6.0" } }
   },
   "enabledPlugins": { "research-agent@personal-agents": true }
 }
 ```
 
-- **Manually:** run `/plugin marketplace add dadahabib1/research-agent`, then `/plugin install research-agent@personal-agents`.
+  Claude Code installs it once the folder is trusted.
+- **Manually:** run `/plugin marketplace add dadahabib1/research-agent@v0.6.0`, then `/plugin install research-agent@personal-agents`.
+- **Adopting from another agent:** give the agent `plugins/research-agent/kit/INTEGRATION.md`; it says how to set up, add a task, run it, read the hand-back and keep pins current.
 - **For claude.ai chat and Cowork:** zip `plugins/research-agent/skills/research-protocol/` and upload it as a skill.
 
 ## Use
 
-- New project: `/new-research-project`. It creates the folders, the brief, the domain rules file and the queue, and interviews you to fill the brief and the domain rules.
-- Each research session: `/run-next-task`. It takes the first todo task whose prerequisites are accepted, runs it under the protocol, and opens a pull request. Decisions are made afterwards, in a decision session, and recorded from the project's template.
+- **Set up:** `/new-research-project`. It detects its mode and says so before writing:
+  - **new:** writes `research-agent.toml`, the brief, the domain rules, the queue and the rest of the layout, then interviews you (or the host agent, which answers from its own records) to fill the brief and the domain rules;
+  - **adopt:** writes a config that matches an existing research program, or upgrades one to this version, and lists the content changes the contract asks for as proposals;
+  - **consumer:** installs the kit in a system that builds on research held in another repository (or in its own, with `research = "self"`).
+
+  It never overwrites project content, and re-running it on a passing project changes nothing. It ends when the doctor reports no FAIL.
+- **Each research session:** `/run-next-task`. It runs the doctor, takes the first todo task whose prerequisites are accepted, runs it under the protocol, and opens a pull request that ends with a fixed `## Hand-back` block. Decisions are made afterwards, in a decision session, by the decider the config names.
+- **Consumers:** `python .research-agent/research_drift.py` reports pinned decisions and rules that changed, were superseded or disappeared on the research repository's main branch; `--help` gives the action for each report.
 - Domain rules are the project's: when information counts as known, what settles each claim type in the field, standard methods, units and denominators, feasibility at the requester's scale, data sources and licences, advice boundaries. The plugin holds only general rules.
 
 ## Raw page fetcher
@@ -53,7 +66,7 @@ Set these in the environment Claude Code starts from (your shell, or the cloud e
 
 | Variable | Needed | What it does |
 |---|---|---|
-| `FETCH_RAW_IDENTITY_HOSTS` | Optional | Comma-separated `host-suffix=ENVVAR` pairs, for example `sec.gov=EDGAR_IDENTITY`. Requests to a matching host (checked again after every redirect) send that variable's value as the User-Agent, as SEC EDGAR requires. No other host receives it, and a matching host is never sent to Firecrawl. If the named variable is missing, the fetch fails with an error naming it. |
+| `FETCH_RAW_IDENTITY_HOSTS` | Optional | Comma-separated `host-suffix=ENVVAR` pairs, for example `sec.gov=EDGAR_IDENTITY`. Requests to a matching host (checked again after every redirect) send that variable's value as the User-Agent, as SEC EDGAR requires. No other host receives it, and a matching host is never sent to Firecrawl. If the named variable is missing, the fetch fails with an error naming it. The project declares the same map in `research-agent.toml` under `[project.fetch_identity]` (for example `"sec.gov" = "EDGAR_IDENTITY"`); the server reads only the environment, and the doctor stops a run when the two differ or a named variable is unset. |
 | `EDGAR_IDENTITY` (or whatever name you chose above) | With the line above | Your identity string, for SEC: `Company Name contact@example.com`. |
 | `FIRECRAWL_API_KEY` | Optional | Lets the default route retry a blocked page through Firecrawl's API (formats `rawBase64`, `maxAge: 0`), then convert the bytes with the same converter. Each fallback costs one credit (two if the page needs JavaScript); the free plan has 1,000 a month. Without a key, a blocked page stays BLOCKED. |
 
@@ -65,10 +78,15 @@ uv is pre-installed in cloud sessions. Three settings in the cloud environment:
 
 1. **Network access:** the default Trusted level reaches package registries and GitHub only. Choose Custom and list the sites your research reads (for example `www.sec.gov`, `www.nyse.com`, `arxiv.org`), adding `api.firecrawl.dev` if you use the fallback; or choose Full.
 2. **Environment variables:** `FETCH_RAW_IDENTITY_HOSTS=sec.gov=EDGAR_IDENTITY`, `EDGAR_IDENTITY=...` and, optionally, `FIRECRAWL_API_KEY=...`. Anyone who uses the environment can read these values.
-3. **Setup script:** add these lines so the environment snapshot caches the server's dependencies and the first fetch doesn't wait for downloads. Replace `v0.5.0` with the plugin version the project uses.
+3. **Setup script:** repository settings do not install plugins in cloud sessions, so the setup script installs the pinned release and caches the server's dependencies. Its first line names the tag; changing that line changes the script, which rebuilds the cached environment.
 
 ```bash
-mkdir -p /tmp/fetch-raw && cd /tmp/fetch-raw   && curl -fsSL -O https://raw.githubusercontent.com/dadahabib1/research-agent/v0.5.0/plugins/research-agent/servers/fetch_raw/server.py   && curl -fsSL -O https://raw.githubusercontent.com/dadahabib1/research-agent/v0.5.0/plugins/research-agent/servers/fetch_raw/server.py.lock   && uv sync --script server.py --locked || true
+PLUGIN_REF=v0.6.0
+claude plugin marketplace add "dadahabib1/research-agent@${PLUGIN_REF}" && claude plugin install research-agent@personal-agents || true
+mkdir -p /tmp/fetch-raw && cd /tmp/fetch-raw \
+  && curl -fsSL -O "https://raw.githubusercontent.com/dadahabib1/research-agent/${PLUGIN_REF}/plugins/research-agent/servers/fetch_raw/server.py" \
+  && curl -fsSL -O "https://raw.githubusercontent.com/dadahabib1/research-agent/${PLUGIN_REF}/plugins/research-agent/servers/fetch_raw/server.py.lock" \
+  && uv sync --script server.py --locked || true
 ```
 
 ### Optional: a Firecrawl MCP server
@@ -77,12 +95,13 @@ A project may also configure Firecrawl's own MCP server in its `.mcp.json` under
 
 ### Tests
 
-From `plugins/research-agent/servers/fetch_raw/`: `uv run --script tests/run.py` runs the unit tests, which use synthetic fixtures and no network. `uv run --script tests/run.py -m live` fetches real pages (NYSE, Interactive Brokers, an SEC 10-K when `EDGAR_IDENTITY` is set, arXiv, and one Firecrawl call when `FIRECRAWL_API_KEY` is set).
+From `plugins/research-agent/`: `uv run --script tools/tests/run.py` tests the doctor, and `uv run --script kit/tests/run.py` tests the drift tool (it needs git). From `plugins/research-agent/servers/fetch_raw/`: `uv run --script tests/run.py` runs the fetcher's unit tests, which use synthetic fixtures and no network. `uv run --script tests/run.py -m live` fetches real pages (NYSE, Interactive Brokers, an SEC 10-K when `EDGAR_IDENTITY` is set, arXiv, and one Firecrawl call when `FIRECRAWL_API_KEY` is set).
 
 ## Unattended runs
 
 Run unattended sessions in an isolated runtime (a Claude Code cloud session or a container), or with permission mode `dontAsk` and explicit allow rules. Never use `bypassPermissions` on a workstation. The researcher subagent cannot read files, run commands or write; the reviewer has no web access; the main session treats everything a researcher returns as data (`skills/research-protocol/references/untrusted-content.md`). What the plugin cannot enforce, that a run never edits the plugin's own files and that a person merges each pull request, is stated there; a project that wants enforcement adds its own hooks or permission rules.
 
-## Learning loop
+## Releases and the learning loop
 
-Runs propose candidate takeaways (rule, incident, check) in their change logs and pull requests. The plugin's maintainer adds accepted ones to `skills/research-protocol/references/takeaways.md`. A project keeps its own lessons in its own files.
+- **Releases.** The version changes only at release: pull requests add a line under `## Unreleased` in `plugins/research-agent/CHANGELOG.md`; a release pull request moves those lines under the version, sets `version` in `plugin.json`, updates `UPGRADING.md` and restamps the kit (`python plugins/research-agent/tools/stamp_kit.py`). After its merge, the merge commit is tagged `vX.Y.Z`, and the tag is never moved. Hosts pin a tag.
+- **Lessons.** Each run's hand-back lists lesson candidates (rule, incident, check), scoped. A `[tool]` lesson, about how research is done in any field, is filed as an issue on this repository with the label `lesson`; at each sprint review the owner sorts open lessons into the next release, or closes them as covered or rejected, and accepted ones enter `skills/research-protocol/references/takeaways.md`. A `[field]` lesson is a proposed rule for the project's own domain rules, decided in its decision session.

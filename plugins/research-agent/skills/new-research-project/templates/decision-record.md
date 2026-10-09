@@ -2,13 +2,26 @@
 
 - Date: <YYYY-MM-DD>
 - Deliverable: `<path>` at commit `<hash>`
-- Decided by: <the requester's name or role>; recorded by <Claude or another agent>
+- Decided by: <the config's decider>; recorded by <Claude or another agent>
 
 Write each decision so an implementing agent can turn it into a spec without reading anything else (research-writing skill, "Writing for an implementing agent"). Use the deliverable's leading words exactly. In the Decision and Rule fields, use "must", "must not" and "may", and keep hedges out. "Reopen when" is optional; the other fields are not.
+
+Each decision opens with a `yaml` header block. `name` equals the subsection heading's name; `status` is one of accepted, rejected, deferred, superseded or withdrawn; `depends_on`, `supersedes` and `parameters` are `[]` when empty, and `supersedes` may instead be a quoted string naming a document and section. A change to an accepted decision is a new decision that supersedes it, never an edit in place. Update `decisions/INDEX.md` in the same pull request.
 
 ## Decisions
 
 ### <decision-name>: <one-sentence decision>
+
+```yaml
+name: <decision-name>
+status: <accepted | rejected | deferred | superseded | withdrawn>
+decided: <YYYY-MM-DD>
+decided_by: <the config's decider>
+depends_on: []
+supersedes: []
+parameters:
+  - {name: <name>, value: <value>, unit: "<unit, per denominator>", source: "<deliverable> §<n>"}
+```
 
 - **Status:** <accepted | rejected | deferred>
 - **Decision:** <normative statement, using "must", "must not" or "may">

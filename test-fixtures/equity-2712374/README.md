@@ -1,0 +1,1 @@
+Copied read-only from dadahabib1/equity_research at commit 2712374 (the files the doctor reads), for the legacy-fallback tests. `_CLAUDE.md` is its `CLAUDE.md`, renamed so Claude Code does not load it here; the tests copy it back under its real name. Do not edit.

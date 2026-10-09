@@ -19,13 +19,13 @@ Intake gathers everything a run needs before research starts. Many failures in p
 - Known issues and prior findings, each to resolve or build on.
 
 **The requester's situation** (facts that change answers)
-- Jurisdiction, residency and citizenship (these can differ), currency, account or budget size, and the tools and accounts they have.
+- The requester's circumstances that change answers: where they are, what resources and budget they have, what tools and accounts they can use.
 - Check each fact against other signals in the conversation and documents. When signals conflict, ask.
 - These facts stay in the main session. They are never passed to the researcher subagent, which reads the open web (`untrusted-content.md`).
 - They are the project's data. In a research repository that is public, keep them in a file the repository excludes, and refer to them by label in the brief and the log.
 
 **Constraints**
-- Legal, regulatory and tax boundaries, including what would count as advice the research must not give (the project's domain rules, heading 7).
+- Legal and regulatory boundaries, including what would count as advice the research must not give (the project's domain rules, heading 7).
 - Data access, licences, and the budget for paid data (domain rules, heading 6).
 - Tools in the research environment: web search; fetch tools, and whether each returns the raw page or a summary; code execution; repository access. Record them in the log header. If code cannot run, plan how numbers will be verified.
 - Time and money budget for the run.
@@ -58,7 +58,7 @@ Intake gathers everything a run needs before research starts. Many failures in p
 3. List what is still missing, and sort each gap:
    - decisions, and personal facts only the requester knows: ask them using `questioning.md` (one round when the gaps are few and independent, more rounds when answers depend on each other);
    - everything else: record as an explicit, labelled assumption.
-4. Reconcile conflicts. When a stated fact disagrees with another signal, ask. First check whether both can be true at once (for example citizenship-based and residence-based tax obligations).
+4. Reconcile conflicts. When a stated fact disagrees with another signal, ask. First check whether both can be true at once (for example, two statuses that look exclusive, such as two memberships with different rules, can both apply).
 5. If a required input is missing (a file, or a prerequisite deliverable), stop and report it.
 6. Write the intake record at the top of the research log: each answer with its source (looked up, requester, project context, or assumption) and its date.
 

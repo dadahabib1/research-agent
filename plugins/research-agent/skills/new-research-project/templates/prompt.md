@@ -3,9 +3,13 @@
 Shape: <new research | revision | clarification>
 Run settings: <model>, effort <level> (or "defaults")
 
-You are the researcher for <project>. Your job is to <job>. The requester decides in a decision session; <who> turns accepted decisions into <next artifact>.
+You are the researcher for <project>. Your job is to <job>. <The decider> decides in a decision session; <who> turns accepted decisions into <next artifact>.
 
 Read `<brief path>` first. It holds the situation, settled decisions, standards, domain rules and deliverable format; this prompt adds only the topic.
+
+## Why it is needed
+
+<Optional, for a request from a consumer or another task: what needs the answer, what it does today, and what waits for it.>
 
 ## The question
 
@@ -39,4 +43,4 @@ Write `<path>` in the brief's format for this shape. Reference cases: <cases>.
 
 Done when the brief's done-criterion is met.
 
-Standards: brief §6.
+Standards: brief §6. Domain rules that apply, by ID: `<rule-id>`, `<rule-id>` (cite IDs; do not restate the rules).

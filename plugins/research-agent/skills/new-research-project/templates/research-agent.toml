@@ -1,0 +1,24 @@
+# research-agent.toml: this repository's research-agent config (contract: the plugin's CONTRACT.md).
+# Keep only the tables that apply; delete the rest. Unknown keys fail the doctor.
+requires = ">=0.6.0, <0.7.0"           # plugin versions this repository works with
+
+[project]                               # present when research runs in this repository
+root = "docs/research"
+brief = "research-brief.md"             # optional; under root
+decider = "<who accepts, rejects or defers decisions, for example requester>"
+env = []                                # environment variable names the sources need, never values
+
+[project.consumer]                      # optional: the system this research serves
+name = "<consumer name>"
+context = "consumer-context.md"         # under root
+
+[project.fetch_identity]                # optional: host suffix = environment variable name; the operator
+# "example.gov" = "EXAMPLE_IDENTITY"    # sets FETCH_RAW_IDENTITY_HOSTS to the same map
+
+[project.run_defaults]                  # optional; else the protocol's references/effort-and-cost.md
+# model = "<model>"
+# effort = "xhigh"
+
+[consumes]                              # present when this repository builds on accepted decisions
+research = "<owner/repo, or self>"
+# clone = "../<repo name>"              # optional; relative to this repository's root

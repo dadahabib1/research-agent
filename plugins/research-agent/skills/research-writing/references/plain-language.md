@@ -25,7 +25,7 @@ A condensed checklist drawn from the US Federal Plain Language Guidelines (2011,
 - Use verbs, not hidden verbs: "we estimated the effect", not "we performed an estimation of the effect". Watch for endings such as -tion, -ment and -ance joined to verbs like make, give, have or conduct.
 - Break up strings of more than three nouns by adding prepositions and articles.
 - Use the same term for the same thing throughout. Synonyms for variety confuse readers.
-- Keep abbreviations to two or three per document. Prefer a plain short name ("the fund"). Spell out each abbreviation on first use; skip the expansion only for ones every reader knows.
+- Keep abbreviations to two or three per document. Prefer a plain short name ("the survey"). Spell out each abbreviation on first use; skip the expansion only for ones every reader knows.
 - Define as few terms as possible, and never give a common word an uncommon meaning.
 - Write out "for example" and "that is"; many readers confuse e.g. and i.e.
 
