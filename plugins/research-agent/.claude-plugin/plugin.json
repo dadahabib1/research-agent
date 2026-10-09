@@ -2,5 +2,8 @@
   "name": "research-agent",
   "version": "0.5.0",
   "description": "A research tool a project installs: a protocol with evidence standards by claim type, a session loop that runs one queued task per session and ends in a pull request, and read-only researcher and reviewer subagents. Writes only into the installing project.",
-  "author": { "name": "dadahabib1" }
+  "author": { "name": "dadahabib1" },
+  "license": "MIT",
+  "repository": "https://github.com/dadahabib1/research-agent",
+  "homepage": "https://github.com/dadahabib1/research-agent"
 }
