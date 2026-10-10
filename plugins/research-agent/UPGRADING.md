@@ -2,6 +2,14 @@
 
 What changes for a project between plugin versions, and what to do about it. `CONTRACT.md` lists the current contract; `CHANGELOG.md` lists every change by release.
 
+## 0.6.0 to 0.6.1
+
+A patch: nothing in a project needs editing.
+
+1. **Pin the release.** Where a project pins the marketplace source, change `"ref"` to `"v0.6.1"` (and `PLUGIN_REF` in a cloud environment's setup script).
+2. **Consumers: copy the kit again.** Run `/new-research-project` in consumer mode, or copy `kit/research_drift.py` and `kit/INTEGRATION.md` over the host's `.research-agent/` copies. The doctor reports the old copies' stamp until then. After the copy, a partial supersession quoted in a `supersedes` list no longer shows as SUPERSEDED; a lock row retired only because of that report can be restored.
+3. **Runs.** Every run reads `takeaways.md` at its start, so entries 42 to 54 apply from the next run. A run prompt that pasted these lessons by hand can drop them.
+
 ## 0.5.x to 0.6.0
 
 0.6.0 adds one config file, a doctor, a consumer kit, a fixed hand-back and rule IDs. A research project without the config keeps working on the 0.5.0 reading of its `CLAUDE.md` "Research" section, with DEPRECATED notices, until 0.7.0 removes that fallback. Nothing a project wrote before needs editing to keep running, and no accepted decision record is touched.

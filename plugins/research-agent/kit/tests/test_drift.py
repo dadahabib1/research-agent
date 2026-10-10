@@ -240,6 +240,17 @@ def test_every_decision_report(tmp):
     assert out.returncode == 1
 
 
+def test_a_quoted_part_of_a_decision_is_not_a_supersession_of_the_whole(tmp):
+    research = research_repo(tmp, record_text=record(("d-one", "accepted", "[]"), ("d-two", "accepted", "[]")))
+    host = pin_all(tmp, research, ["d-one", "d-two"])
+    commit(research, {"research/decisions/later-2026-10-02.md": record(
+        ("d-four", "accepted", '[d-one, "d-two rule 2, detection only"]'))})
+    lines = reports(drift(host, "--no-fetch"))
+    assert any(l.startswith("SUPERSEDED d-one: by d-four") for l in lines), lines
+    assert not any(l.startswith("SUPERSEDED d-two") for l in lines), lines
+    assert any(l.startswith("NEW      d-four: accepted on ") for l in lines), lines
+
+
 def test_every_report_code_is_covered():
     source = Path(__file__).read_text(encoding="utf-8")
     for code in ("PENDING ", "CHANGED ", "SUPERSEDED ", "STATUS ", "MISSING ", "NEW ", "DEPRECATED "):

@@ -1,4 +1,4 @@
-<!-- research-agent 0.6.0 sha256:713af51563d2f867b86e2ab56c222d82940a85fa0e7c2f3acb18e391666fcbf5 -->
+<!-- research-agent 0.6.1 sha256:713af51563d2f867b86e2ab56c222d82940a85fa0e7c2f3acb18e391666fcbf5 -->
 # Adopting research-agent (contract 0.6)
 
 research-agent runs research projects: questions that need cited evidence and checked numbers before someone decides, answered under a fixed protocol that ends in a pull request and a decision session. Use it for those; answer quick lookups yourself.

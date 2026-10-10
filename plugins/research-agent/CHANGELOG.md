@@ -4,6 +4,17 @@ Every change to the plugin, by release. A pull request adds a line under `## Unr
 
 ## Unreleased
 
+## 0.6.1 (2026-10-10)
+
+Thirteen lessons from the first runs under 0.6.0, and a drift-check fix. The protocol's steps, the hand-back and the contract are unchanged.
+
+- Added: `takeaways.md` entries 42 to 54 (section I), from lesson issues #9 to #13 and #15 to #21. Most are about cost: the main session keeps its context bounded by handing off or compacting at phase boundaries (48), copies subagent returns by script and edits in place (49), and keeps script output in files (50); a run says how its main session's spend can be measured (52). The rest: isolated measurement environments (42), raw fetches only on identity hosts (43, after #10 recurred), cached negative responses and kept failure bodies (44), samples named before results (45), escapes in files, not heredocs (46), style proxies tested on both backgrounds (47), long measurements with a limit, a cache and a checkpoint (51), bounds and counts on one unit (53), unique keys in merged selections (54).
+- Fixed: the drift tool reported SUPERSEDED, with its "retire the old row" action, when an accepted decision's `supersedes` list quoted only a part of a pinned decision (for example `"<decision> rule 2, detection only"`). It now reports SUPERSEDED only when the list names the pinned decision alone, bare or quoted (#14). A partial supersession still reaches the host through the new decision's NEW report; a report of its own needs a contract change and waits for 0.7.0.
+
+### Contract
+
+- Unchanged. The SUPERSEDED line of `--help` now says what counts as naming a decision.
+
 ## 0.6.0 (2026-10-09)
 
 One config file, a setup skill that adopts and checks, a consumer kit, a fixed hand-back, releases, and domain rules with IDs. The research protocol itself is unchanged, and so is `fetch_raw`'s code; only its version label moves with the release. Design: `docs/design/0.6.0.md`.

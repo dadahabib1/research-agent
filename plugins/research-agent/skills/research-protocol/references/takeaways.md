@@ -148,3 +148,45 @@ Each entry gives the rule, the incident that taught it, and a check a reviewer c
 41. **Set the run's settings before it starts.**
     *Incident:* the first plugin run recorded "effort not set; treated as high" although the researcher agent specifies xhigh, and spend was reported only after review.
     *Check:* the log header records shape, model and effort before intake, and the hand-over reports spend.
+
+## I. From plugin runs under 0.6.0 (2026-10-09 and 2026-10-10)
+
+42. **Isolate measurement environments, and record library versions.**
+    *Incident:* a version probe ran inside a sibling checkout's environment and reported an older library version than the latest release.
+    *Check:* every script command in the log uses the isolated form, and each output names the library versions it imported.
+43. **On a host that needs an identity, fetch raw or report the gap.**
+    *Incident:* summarising fetches to such a host went out without the identity, in two consecutive runs; the lesson filed after the first did not stop the second.
+    *Check:* the notes' fetch labels show no summarising fetch to an identity host.
+44. **Cache negative responses, and keep failed response bodies.**
+    *Incident:* the reviewer's offline re-run met 15 uncached 404s, and the bodies of 15 failed fetches were not kept, so their cause stays unknown.
+    *Check:* an offline re-run from the cache makes no network request, and each recorded failure has a saved body.
+45. **Name samples before their results; disclose rules revised after first results.**
+    *Incident:* two samples were added and two rules revised after their first results, and the first draft did not say so.
+    *Check:* each sample appears in the plan or an amendment dated before its results, and each revised rule's Verification row gives the earlier result and the reason.
+46. **Write scripts with backslash escapes to files, not shell heredocs.**
+    *Incident:* a heredoc turned a regular-expression escape into a control character.
+    *Check:* scripts with escapes are files in the run's folder, run by path.
+47. **Test a style-based proxy on light and dark backgrounds.**
+    *Incident:* a first proxy for hidden text counted white backgrounds as hidden (200 of 234 documents).
+    *Check:* the proxy's tests include white-on-dark and dark-on-white cases.
+48. **Keep the main session's context bounded.**
+    *Incident:* a main session let its context grow to about 1M tokens before an automatic compaction; calls above 500k of context made 77% of its re-reading, and the main session was about 62% of the run's input-equivalent tokens, while thinking was under 3%.
+    *Check:* the main session hands off or compacts at phase boundaries (after the draft commit, before the review fixes), the log records each one, and no main-session call runs above a stated ceiling (for example 300k tokens).
+49. **Copy subagent returns by script, and edit documents in place.**
+    *Incident:* a main session re-typed every researcher return into notes files, so each return sat in its context twice, and wrote the deliverable in full five times: about 750k characters of its own writes.
+    *Check:* each notes file matches its subagent's return exactly, and after the first draft the deliverable changes by edits, not whole-file writes.
+50. **Scripts print a summary; their full output goes to files.**
+    *Incident:* command output was the largest single source of a main session's context growth (about 540k characters over 218 commands), more than any file it read.
+    *Check:* each script's printed output stays under a stated size, and its full output is in the run's output folder (entry 33 covers reading it back).
+51. **Give a long measurement a time limit, a resumable cache and a checkpoint.**
+    *Incident:* a survey hit a 30-minute background limit and had to be re-run, and a container restart lost a running delegation; both resumed only from the cache or by relaunching.
+    *Check:* the log names each long run's time limit and cache, and the checkpoint commit before each long delegation.
+52. **Say how the main session's spend can be measured.**
+    *Incident:* two runs reported only their subagents' self-reported tokens (about 1.7M and 2.4M). Measured from one run's transcript, its subagents processed about 60M raw tokens, and its main session about twice the subagents' total.
+    *Check:* the spend line gives the run's start and end times and where the main session's tokens can be read (the local transcript, or the account's usage before and after), and labels self-reports as final context plus output.
+53. **Put a zero-event bound and its expected count on one unit.**
+    *Incident:* a first draft multiplied a bound on a cluster's latest document by a count of clusters, which holds only when every document of an affected cluster is affected; the independent review caught it.
+    *Check:* each bound-to-count conversion names one unit, and its verdict is tested at both ends of every unresolved input.
+54. **Assert a unique key when merging selections.**
+    *Incident:* two selection rules named the same item, and the merged list held it twice until review.
+    *Check:* the build, or its fixture, fails on a repeated key.
