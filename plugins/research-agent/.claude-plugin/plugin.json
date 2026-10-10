@@ -1,6 +1,6 @@
 {
   "name": "research-agent",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "description": "A research tool a project installs: a protocol with evidence standards by claim type, a session loop that runs one queued task per session and ends in a pull request, and read-only researcher and reviewer subagents. Writes only into the installing project.",
   "author": { "name": "dadahabib1" },
   "license": "MIT",
