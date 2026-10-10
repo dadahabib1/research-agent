@@ -10,7 +10,7 @@ Run one research task per session. Names and formats are in `${CLAUDE_PLUGIN_ROO
 
 ## Steps
 
-0. **Check the project.** At the repository root, on the default branch, run `uv run --script ${CLAUDE_PLUGIN_ROOT}/tools/doctor.py --mode run`.
+0. **Check the project.** At the repository root, on the default branch, run `uv run --script ${CLAUDE_PLUGIN_ROOT}/tools/doctor.py --mode run`. Run one session per clone: parallel runs each use their own clone, never two sessions or worktrees of one clone at once (the selector protects a shared clone only partly; `CONTRACT.md`, "The queue").
    - Exit 1 (a FAIL), or exit 2: stop before intake. Report the FAIL lines (or the doctor's error) as the hand-back with `Status: stopped: doctor`, and end the session. A FAIL on check 1's range means the installed plugin is outside the project's `requires`.
    - Otherwise take the paths from the config: `<root>` is `project.root` in `research-agent.toml`; the brief is `<root>/<brief>`; the domain rules, queue, `prompts/`, `logs/` and `decisions/` sit under `<root>` as the contract fixes them; the consumer context file is `<root>/<project.consumer.context>`.
    - Copy the doctor's `config:` line and its WARN and DEPRECATED items into the log header at step 2.
