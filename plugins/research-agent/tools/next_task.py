@@ -261,19 +261,31 @@ def claim(repo: Repo, row: Row) -> str | None:
     commit = git(repo.path, "commit-tree", tree, "-p", base, "-m", message)
     previous = git(repo.path, "symbolic-ref", "-q", "--short", "HEAD", check=False) or git(repo.path, "rev-parse", "HEAD")
     git(repo.path, "checkout", "-q", "-B", row.branch, commit)  # a failure here leaves nothing on the remote
+    # every step that can fail runs before the push, and nothing runs after it, so no failure strands a claim
+    for key, value in (("remote", "origin"), ("merge", f"refs/heads/{row.branch}")):
+        out = run(["git", "config", f"branch.{row.branch}.{key}", value], repo.path)
+        if out.returncode != 0:
+            drop_local(repo, row, previous, commit)
+            raise CannotRun(f"git config branch.{row.branch}.{key} failed: {out.stderr.strip()}")
     push = ["git", "push", "-q"]
     if row.tip and not resume:  # an abandoned or done branch: replace it only if nobody moved it
         push.append(f"--force-with-lease=refs/heads/{row.branch}:{row.tip}")
     out = run([*push, "origin", f"{commit}:refs/heads/{row.branch}"], repo.path)
     if out.returncode != 0:
-        git(repo.path, "checkout", "-q", previous)
-        git(repo.path, "branch", "-q", "-D", row.branch)
+        drop_local(repo, row, previous, commit)
         if any(mark in out.stderr for mark in LOST_RACE):
             return None
         raise CannotRun(f"git push of the claim on {row.branch} failed: {out.stderr.strip()}")
-    git(repo.path, "config", f"branch.{row.branch}.remote", "origin")
-    git(repo.path, "config", f"branch.{row.branch}.merge", f"refs/heads/{row.branch}")
     return commit[:7]
+
+
+def drop_local(repo: Repo, row: Row, previous: str, commit: str) -> None:
+    """Leave the claim branch and delete it, but only while it still holds our claim commit."""
+    git(repo.path, "checkout", "-q", previous)
+    if run(["git", "update-ref", "-d", f"refs/heads/{row.branch}", commit], repo.path).returncode == 0:
+        git(repo.path, "config", "--remove-section", f"branch.{row.branch}", check=False)
+    else:
+        print(f"note: kept {row.branch}: it moved after the claim, so it holds work that is not ours to delete")
 
 
 def keep_unpushed(repo: Repo, row: Row) -> None:

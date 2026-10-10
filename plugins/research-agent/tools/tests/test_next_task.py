@@ -384,6 +384,39 @@ def test_a_blocked_checkout_leaves_no_claim(origin, capsys):
     assert any(l.split()[:2] == ["todo", "stopped"] and "topic-a" in l for l in out.splitlines()), out
 
 
+def test_a_config_failure_leaves_no_claim_on_the_remote(origin, capsys):
+    """F1: the branch configuration is written before the push, so a locked config strands nothing."""
+    a = clone(origin, "a")
+    (a / ".git" / "config.lock").write_text("", encoding="utf-8")
+    code, out = select(a, capsys=capsys)
+    assert code == 2, out
+    assert "could not lock config file" in out
+    assert not g(origin, "branch", "--list", "research/topic-a")
+    assert g(a, "branch", "--show-current") == "main"
+    assert not g(a, "branch", "--list", "research/topic-a")
+
+
+def test_a_lost_race_keeps_a_local_branch_that_moved(origin, capsys, monkeypatch):
+    """F2: the cleanup deletes the claim branch only while it still holds our claim commit."""
+    a, b = clone(origin, "a"), clone(origin, "b")
+    real, moved = nt.run, []
+
+    def run(cmd, cwd):
+        if cmd[:3] == ["git", "push", "-q"] and not moved:
+            moved.append(1)
+            g(b, "commit", "-q", "--allow-empty", "-m", "rival claim")
+            g(b, "push", "-q", "origin", "HEAD:refs/heads/research/topic-a")
+            g(a, "commit", "-q", "--allow-empty", "-m", "work from another writer")
+        return real(cmd, cwd)
+
+    monkeypatch.setattr(nt, "run", run)
+    code, out = select(a, capsys=capsys)
+    assert code == 0, out
+    assert "note: kept research/topic-a" in out
+    assert g(a, "log", "-1", "--format=%s", "research/topic-a") == "work from another writer"
+    assert g(a, "branch", "--show-current") == "research/topic-b"
+
+
 def test_invalid_and_duplicate_topics_are_passed_over(tmp_path, capsys):
     """L1: an empty, shared or unusable deliverable stem never reaches a git ref."""
     bare = tmp_path / "origin.git"
