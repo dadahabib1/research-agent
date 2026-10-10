@@ -4,6 +4,17 @@ Every change to the plugin, by release. A pull request adds a line under `## Unr
 
 ## Unreleased
 
+## 0.6.2 (2026-10-10)
+
+Nineteen lesson issues from runs under 0.6.1, folded into ten new takeaways and seven amendments. The protocol's steps, the hand-back, the kit's code and the contract are unchanged.
+
+- Added: `takeaways.md` entries 55 to 64 (section J), from lesson issues #24, #25, #29 with #30, #31, #33, #34, #35, #37, #39 and #40. Most are checks before trusting a number: binary data files read by script (55), interacting parameters tested together on a replay (56), a rule scored only on a holdout drawn after it is frozen and labelled blind to its output (57), periods keyed by end date (58), a new extraction pattern run on one known document first (59), a test case for every step of an ordered rule (60), a weight's total and largest values checked (61), options compared on totals to the horizon's end (63), and every simulated variant shown in the comparison table (64). One is about cost: a subagent stopped by a usage limit is resumed, not relaunched (62).
+- Changed: seven entries now cover a later case of their lesson. Entry 49 copies a subagent's return from the channel the harness delivers it on, final message or hand-back call, and checks the copy's length and first and last lines (#23, #36); 11 dates a file's contents by its edition, with as-of tests either side of each publication (#26); 52 names the counter behind every spend figure (#27); 45 logs a parameter change made after a result when it is made (#32); 37 labels figures fed by an ILLUSTRATIVE constant ILLUSTRATIVE (#38); 10 defines each formula symbol's basis and tests a change of basis (#41); 22 uses a regulator's or registry's filed copy where terms forbid automated access (#43).
+
+### Contract
+
+- Unchanged.
+
 ## 0.6.1 (2026-10-10)
 
 Thirteen lessons from the first runs under 0.6.0, and a drift-check fix. The protocol's steps, the hand-back and the contract are unchanged.

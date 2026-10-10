@@ -2,6 +2,14 @@
 
 What changes for a project between plugin versions, and what to do about it. `CONTRACT.md` lists the current contract; `CHANGELOG.md` lists every change by release.
 
+## 0.6.1 to 0.6.2
+
+A patch: nothing in a project needs editing.
+
+1. **Pin the release.** Where a project pins the marketplace source, change `"ref"` to `"v0.6.2"` (and `PLUGIN_REF` in a cloud environment's setup script).
+2. **Consumers: nothing to copy.** The kit's content is unchanged; only its stamp moves to 0.6.2. The 0.6.1 copies still pass the doctor. Copying the kit again (`/new-research-project` in consumer mode) only updates the stamp.
+3. **Runs.** Every run reads `takeaways.md` at its start, so entries 55 to 64 and the amended entries 10, 11, 22, 37, 45, 49 and 52 apply from the next run. A run prompt that pasted these lessons by hand can drop them.
+
 ## 0.6.0 to 0.6.1
 
 A patch: nothing in a project needs editing.

@@ -1,4 +1,4 @@
-# research-agent 0.6.1 sha256:c8ca4817bc28e99851b21d86329d1b7866e62bc0726bb00ccd0bf45b38eecd15
+# research-agent 0.6.2 sha256:c8ca4817bc28e99851b21d86329d1b7866e62bc0726bb00ccd0bf45b38eecd15
 # /// script
 # requires-python = ">=3.11"
 # dependencies = []
