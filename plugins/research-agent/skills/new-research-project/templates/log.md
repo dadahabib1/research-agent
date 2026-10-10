@@ -2,9 +2,9 @@
 
 - Run date:
 - Shape: <new research | revision | clarification> (<declared | assumed>)
-- Model and effort:
+- Model and effort: <model, or "by reference" where the host forbids model identifiers in the repository>
 - research-agent plugin version:
-- Config: <research-agent.toml | legacy CLAUDE.md prose (deprecated; removed in 0.7.0)>
+- Config: research-agent.toml
 - Doctor: <WARN and DEPRECATED items, or "none">
 - Fetch tools available: <summarising fetcher (WebFetch) | raw fetcher (<name>) | both>
 - Prompt:
@@ -67,3 +67,7 @@ Every domain rule in scope for each question group, by ID. Every decision-critic
 ## Spend
 
 - Tokens or cost, with model and effort:
+
+## Hand-back
+
+<The run's `## Hand-back` block (the plugin's CONTRACT.md), the same as at the end of the pull request body. Without a pull request, `/run-next-task` reads the run's status from here.>

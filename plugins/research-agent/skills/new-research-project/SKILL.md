@@ -15,8 +15,8 @@ The contract is `${CLAUDE_PLUGIN_ROOT}/CONTRACT.md`: the config schema, the fixe
 ## Steps
 
 1. **Detect the mode.** Run `uv run --script ${CLAUDE_PLUGIN_ROOT}/tools/doctor.py --mode setup` at the repository root and read its `config:` line and check 1:
-   - **new:** no `research-agent.toml` and no research files (check 1 FAIL: no config and no "Research" section);
-   - **adopt:** research files exist with no config (check 1 DEPRECATED), or a config whose `requires` excludes this plugin version (check 1 FAIL on the range). Upgrading is adopt on a project that has a config;
+   - **new:** no `research-agent.toml` and no research files (check 1 FAIL naming new mode);
+   - **adopt:** research files exist with no config (check 1 FAIL naming adopt mode: `CLAUDE.md` has a "Research" section), or a config whose `requires` excludes this plugin version (check 1 FAIL on the range). Upgrading is adopt on a project that has a config;
    - **consumer:** in new or adopt mode, or when the host or user asks to connect a consumer, ask whether this repository builds on decisions from research held in another repository. A config that passes the doctor with no `[consumes]` table has no consumer, so a re-run does not ask again. If yes, consumer mode runs as well, alone or after new or adopt. A repository that runs research and builds on it itself gets `[consumes] research = "self"` and the kit, after new mode.
    - A config that passes and needs no consumer change: nothing to set up; report the doctor's result and end.
 
@@ -33,7 +33,7 @@ The contract is `${CLAUDE_PLUGIN_ROOT}/CONTRACT.md`: the config schema, the fixe
      - Pinned enablement in `.claude/settings.json`: `extraKnownMarketplaces` entry `"personal-agents": {"source": {"source": "github", "repo": "dadahabib1/research-agent", "ref": "v<version>"}}` and `enabledPlugins` `"research-agent@personal-agents": true`, merged into any existing file.
    - **adopt without a config:** a `research-agent.toml` that matches the existing files: `root`, `brief` and the context file from the `CLAUDE.md` "Research" section and the files themselves; `decider` and `env` from the brief, the domain rules and the requester; `[project.fetch_identity]` from the domain rules' identity rule, if one names a host and a variable. Replace the prose paths in `CLAUDE.md` with the pointer, keeping every rule that is the project's own. Then every file new mode writes that is missing, such as `templates/prompt.md`, `.gitignore` lines and the pull request template.
    - **adopt with a config (upgrade):** the new `requires`, the pinned `ref`, the mechanical steps in `${CLAUDE_PLUGIN_ROOT}/UPGRADING.md` for each version crossed, any missing file new mode writes, and the kit copied again where its stamp is older (see consumer).
-   - **adopt, both cases:** list as proposals, not edits, the content changes the contract asks for (for example domain rules as bullets to convert to rule IDs, DEPRECATED items from the doctor) and the steps only a person can take (setting environment variables, the cloud setup script's `PLUGIN_REF`).
+   - **adopt, both cases:** list as proposals, not edits, the content changes the contract asks for (for example domain rules written as bullets, which fail check 4b until each has a rule ID, and any DEPRECATED item from the doctor) and the steps only a person can take (setting environment variables, the cloud setup script's `PLUGIN_REF`).
    - **consumer:**
      - A `[consumes]` table: `research = "<owner/repo>"` (or `"self"`), and `clone` only when the clone is not at `../<repo name>`.
      - The kit: `mkdir -p .research-agent`, then `cp ${CLAUDE_PLUGIN_ROOT}/kit/INTEGRATION.md ${CLAUDE_PLUGIN_ROOT}/kit/research_drift.py .research-agent/`. Copy with `cp`, never by rewriting, so the stamps match. Replace an existing kit file only when the doctor reports its stamp's version outside `requires` and no local edit; report a local edit instead.
@@ -54,4 +54,4 @@ The contract is `${CLAUDE_PLUGIN_ROOT}/CONTRACT.md`: the config schema, the fixe
    Done when every named topic has a prompt and a queue row.
 
 5. **Check.** Run `uv run --script ${CLAUDE_PLUGIN_ROOT}/tools/doctor.py --mode setup`. Fix each FAIL that this setup caused; report the rest, with each WARN and DEPRECATED item, to the host or user.
-   Done when the doctor reports no FAIL. Tell the host or user to commit setup's changes and merge them into the default branch before the first `/run-next-task`, so a run's pull request carries only the run.
+   Done when the doctor reports no FAIL, apart from content changes listed as proposals in step 2 (such as check 4b's bullet rules), which the host or user makes by pull request before the first run. Tell the host or user to commit setup's changes and merge them into the default branch before the first `/run-next-task`, so a run's pull request carries only the run.

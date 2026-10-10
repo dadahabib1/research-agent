@@ -1,4 +1,4 @@
-# research-agent 0.6.2 sha256:c8ca4817bc28e99851b21d86329d1b7866e62bc0726bb00ccd0bf45b38eecd15
+# research-agent 0.7.0 sha256:94258f5b9b0cd6ace3dc3900b86184b286873029d80a5807e8c4dca3ea42e1da
 # /// script
 # requires-python = ">=3.11"
 # dependencies = []
@@ -31,11 +31,11 @@ from pathlib import Path
 
 CONFIG = "research-agent.toml"
 LOCK_PATH = "docs/research-lock.md"
-LEGACY_ROOT = "docs/research"
+DEFAULT_ROOT = "docs/research"
 REF = "origin/main"
 LOCK = Path(LOCK_PATH)
-DECISIONS = f"{LEGACY_ROOT}/decisions"
-RULES = f"{LEGACY_ROOT}/domain-rules.md"
+DECISIONS = f"{DEFAULT_ROOT}/decisions"
+RULES = f"{DEFAULT_ROOT}/domain-rules.md"
 
 REPORTS = """reports, and what to do about each:
 
@@ -50,9 +50,15 @@ REPORTS = """reports, and what to do about each:
               specs and code that rely on it, and the row (new commit, hash and date), in one
               pull request.
   SUPERSEDED  an accepted decision on REF supersedes a pinned one (its supersedes list names
-              the pinned decision alone; a quoted part of a decision is not reported here).
+              the pinned decision alone; a quoted part of a decision is PARTIAL).
               Action: consume the new decision; list every spec, ticket and test that uses the
               old one, and retire the old row, in the same pull request.
+  PARTIAL     an accepted decision on REF that the lock does not hold supersedes a quoted part
+              of a pinned decision (for example "<decision> rule 2, detection only").
+              Action: read the new decision and the part it replaces; update the specs, tickets
+              and tests that rely on that part, and pin the new decision, in one pull request.
+              Keep the old row: the rest of the old decision still holds. Pinning the new
+              decision ends this report.
   STATUS      a pinned decision is no longer accepted.
               Action: escalate to your decider; you build on something withdrawn.
   MISSING     the record, decision or rule is gone from REF.
@@ -61,8 +67,6 @@ REPORTS = """reports, and what to do about each:
               not hold.
               Action: decide whether your work needs it now; pin it when your work starts
               relying on it (--hash gives the hash).
-  DEPRECATED  the research repository has no research-agent.toml on REF, so its research is read
-              from docs/research (removed in 0.7.0).
   WARN        this kit's stamp names a version outside your requires range: copy the kit again
               (/new-research-project), or change requires.
 
@@ -129,11 +133,22 @@ def lock_rows() -> dict[str, list[dict[str, str]]]:
     return tables
 
 
+def supersede_items(text: str) -> list[str]:
+    """The items of a supersedes value: a list of bare or quoted items, or one quoted string."""
+    items = re.findall(r'"([^"]*)"|\'([^\']*)\'|([^,\[\]\s"\'][^,\[\]]*)', text)
+    return ["".join(item).strip() for item in items]
+
+
 def supersedes(text: str, name: str) -> bool:
     """Whether a supersedes list names the whole decision: an item that is the name alone,
     bare or quoted. A quoted part of a decision ("<name> rule 2, detection only") is not."""
-    items = re.findall(r'"([^"]*)"|\'([^\']*)\'|([^,\[\]\s"\'][^,\[\]]*)', text)
-    return any("".join(item).strip() == name for item in items)
+    return name in supersede_items(text)
+
+
+def supersedes_part(text: str, name: str) -> str | None:
+    """The item that names a part of the decision: the name followed by more words."""
+    return next((item for item in supersede_items(text)
+                 if re.match(rf"{re.escape(name)}(?![\w-])\W*\w", item)), None)
 
 
 def host_rules(text: str, consumer: str) -> list[str]:
@@ -179,6 +194,8 @@ def check(research: Path, consumer: str | None) -> list[str]:
         for old in sorted(locked - {name}):
             if supersedes(field(block, "supersedes"), old):
                 report.append(f"SUPERSEDED {old}: by {name} ({path})")
+            elif name not in locked and (part := supersedes_part(field(block, "supersedes"), old)):
+                report.append(f'PARTIAL  {old}: "{part}" superseded by {name} ({path})')
         if name not in locked:
             report.append(f"NEW      {name}: accepted on {head} ({path}), not in the lock")
     rules_text = show(research, RULES)
@@ -235,22 +252,21 @@ class SetupError(Exception):
     """A setup problem: exit code 2."""
 
 
-def research_layout(research: Path) -> tuple[str | None, list[str]]:
+def research_layout(research: Path) -> str | None:
     """Set DECISIONS and RULES from the research repository's config on REF.
-    Returns the consumer name it declares and any notices."""
+    Returns the consumer name it declares."""
     global DECISIONS, RULES
     text = show(research, CONFIG)
     if text is None:
-        DECISIONS, RULES = f"{LEGACY_ROOT}/decisions", f"{LEGACY_ROOT}/domain-rules.md"
-        return None, [f"DEPRECATED {research} has no {CONFIG} on {REF}; reading {LEGACY_ROOT}/ "
-                      "(removed in 0.7.0)"]
+        raise SetupError(f"{research} has no {CONFIG} on {REF}: the research repository has not adopted "
+                         "research-agent 0.6 or later (its /new-research-project, adopt mode)")
     try:
         project = tomllib.loads(text).get("project", {})
     except tomllib.TOMLDecodeError:
         raise SetupError(f"{research}: {CONFIG} on {REF} does not parse") from None
-    root = project.get("root", LEGACY_ROOT).strip("/")
+    root = project.get("root", DEFAULT_ROOT).strip("/")
     DECISIONS, RULES = f"{root}/decisions", f"{root}/domain-rules.md"
-    return (project.get("consumer") or {}).get("name"), []
+    return (project.get("consumer") or {}).get("name")
 
 
 def main() -> int:
@@ -303,10 +319,11 @@ def main() -> int:
         print(f"git failed in {research}: {exc.stderr.strip()} (pass --no-fetch, or --ref)")
         return 2
     try:
-        consumer, notices = research_layout(research)
+        consumer = research_layout(research)
     except SetupError as exc:
         print(exc)
         return 2
+    notices = []
     version, requires = own_version(), config.get("requires")
     if version and isinstance(requires, str) and not in_range(version, requires):
         notices.append(f'WARN     this kit is research-agent {version}, outside requires = "{requires}"; '

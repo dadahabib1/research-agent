@@ -1,5 +1,6 @@
 """The drift tool: UTF-8 hashes of equity's real decision records and the app's one re-pin, rule pins,
-research = "self", the legacy fallback, every report code, exit codes, the stamp and --help."""
+research = "self", a research repository without a config, every report code, exit codes, the
+stamp and --help."""
 
 import hashlib
 import json
@@ -11,7 +12,7 @@ from conftest import KIT, commit, drift, git, init, lock, make_host, write
 
 EQUITY = KIT.parents[2] / "test-fixtures" / "equity"  # outside the shipped plugin folder
 APP_CONSUMES = '[consumes]\nresearch = "dadahabib1/equity_research"\n'
-REQUIRES = 'requires = ">=0.6.0, <0.7.0"\n'
+REQUIRES = 'requires = ">=0.7.0, <0.8.0"\n'
 
 
 def lock_hashes(text: str) -> list[tuple[str, str, str]]:
@@ -30,6 +31,7 @@ def equity_clone(tmp: Path) -> Path:
     research = init(tmp / "equity_research")
     files = {f"docs/research/decisions/{p.name}": p.read_text(encoding="utf-8").replace("\r\n", "\n")
              for p in (EQUITY / "decisions").glob("*.md")}
+    files["research-agent.toml"] = 'requires = ">=0.7.0, <0.8.0"\n[project]\nroot = "docs/research"\ndecider = "requester"\n'
     commit(research, files, "equity decisions at 2712374")
     return research
 
@@ -57,7 +59,7 @@ def test_hashes_equity_decisions_as_utf8(tmp):
         assert out.stdout.strip() == utf8_hash(record, name), name
 
 
-def test_the_apps_12_rows_need_one_re_pin_on_the_legacy_fallback(tmp):
+def test_the_apps_12_rows_need_one_re_pin(tmp):
     """Migration §13, step 2: the app's script hashed git output decoded as cp1252 (Python's default on
     Windows), so its 12 rows report CHANGED once; re-pinned with --hash, they report no drift."""
     equity_clone(tmp)
@@ -72,9 +74,7 @@ def test_the_apps_12_rows_need_one_re_pin_on_the_legacy_fallback(tmp):
     out = drift(host, "--no-fetch")
     assert out.returncode == 0, out.stdout + out.stderr
     lines = out.stdout.strip().splitlines()
-    assert lines[0].startswith("DEPRECATED ") and "has no research-agent.toml" in lines[0]
-    assert lines[1].startswith("No drift: every pinned decision and rule matches")
-    assert len(lines) == 2
+    assert len(lines) == 1 and lines[0].startswith("No drift: every pinned decision and rule matches")
 
 
 def test_the_hash_is_the_apps_function():
@@ -93,7 +93,7 @@ def test_the_hash_is_the_apps_function():
 
 # ---------- a research repository with a config ----------
 
-CONFIG = '''requires = ">=0.6.0, <0.7.0"
+CONFIG = '''requires = ">=0.7.0, <0.8.0"
 [project]
 root = "research"
 decider = "requester"
@@ -248,12 +248,31 @@ def test_a_quoted_part_of_a_decision_is_not_a_supersession_of_the_whole(tmp):
     lines = reports(drift(host, "--no-fetch"))
     assert any(l.startswith("SUPERSEDED d-one: by d-four") for l in lines), lines
     assert not any(l.startswith("SUPERSEDED d-two") for l in lines), lines
+    assert 'PARTIAL  d-two: "d-two rule 2, detection only" superseded by d-four ' \
+           "(research/decisions/later-2026-10-02.md)" in lines, lines
     assert any(l.startswith("NEW      d-four: accepted on ") for l in lines), lines
+
+
+def test_pinning_the_new_decision_ends_the_partial_report(tmp):
+    research = research_repo(tmp, record_text=record(("d-one", "accepted", "[]"), ("d-two", "accepted", "[]")))
+    host = pin_all(tmp, research, ["d-one", "d-two"])
+    later = "research/decisions/later-2026-10-02.md"
+    commit(research, {later: record(("d-four", "accepted", '"d-two §3, detection only"'),
+                                    ("d-five", "accepted", '["d-twofold"]'))})
+    lines = reports(drift(host, "--no-fetch"))
+    assert sum(l.startswith("PARTIAL ") for l in lines) == 1, lines  # d-twofold is another name
+    assert any(l.startswith('PARTIAL  d-two: "d-two §3, detection only" superseded by d-four') for l in lines)
+    text = (host / "docs/research-lock.md").read_text(encoding="utf-8")
+    head = git(research, "rev-parse", "--short", "HEAD").strip()
+    row = f"| d-four | `{later}` | {head} | {hash_of(host, 'decision', later, 'd-four')} | ticket | 2026-10-10 |\n"
+    write(host, {"docs/research-lock.md": text.replace("\n## Pinned rules", row + "\n## Pinned rules")})
+    lines = reports(drift(host, "--no-fetch"))
+    assert not any(l.startswith("PARTIAL ") for l in lines), lines
 
 
 def test_every_report_code_is_covered():
     source = Path(__file__).read_text(encoding="utf-8")
-    for code in ("PENDING ", "CHANGED ", "SUPERSEDED ", "STATUS ", "MISSING ", "NEW ", "DEPRECATED "):
+    for code in ("PENDING ", "CHANGED ", "SUPERSEDED ", "PARTIAL ", "STATUS ", "MISSING ", "NEW "):
         assert f'"{code}' in source or f"'{code}" in source, code
 
 
@@ -278,20 +297,18 @@ def test_self(tmp):
     assert len(lines) == 1 and lines[0].startswith("CHANGED  d-one")
 
 
-# ---------- the legacy fallback ----------
+# ---------- a research repository without a config ----------
 
-def test_legacy_fallback_reads_docs_research(tmp):
-    research = init(tmp / "legacy")
+def test_a_research_repository_without_a_config_is_a_setup_error(tmp):
+    """The 0.6.x fallback to docs/research is gone (0.7.0)."""
+    research = init(tmp / "unadopted")
     commit(research, {"docs/research/decisions/r.md": record(("d-one", "accepted", "[]")),
                       "docs/research/domain-rules.md": rules(("a-rule", "Holds.", "app", False))})
     host = host_for(tmp, research)
-    head = git(research, "rev-parse", "--short", "HEAD").strip()
-    write(host, {"docs/research-lock.md": lock(
-        [("d-one", "docs/research/decisions/r.md", head, hash_of(host, "decision", "docs/research/decisions/r.md", "d-one"))],
-        [("a-rule", head, hash_of(host, "rule", "a-rule"))])})
-    lines = reports(drift(host, "--no-fetch"))
-    assert lines[0].startswith("DEPRECATED ") and "reading docs/research/" in lines[0]
-    assert lines[1].startswith("No drift")  # no consumer name on legacy, so no NEW rule reports
+    for args in (("--no-fetch",), ("--no-fetch", "--hash", "rule", "a-rule")):
+        out = drift(host, *args)
+        assert out.returncode == 2, out.stdout + out.stderr
+        assert "has no research-agent.toml on origin/main" in out.stdout
 
 
 # ---------- fetching ----------
@@ -364,7 +381,7 @@ def test_warns_when_its_stamp_is_outside_requires(tmp):
     research = research_repo(tmp)
     host = pin_all(tmp, research, ["d-one"])
     write(host, {"research-agent.toml": (host / "research-agent.toml").read_text(encoding="utf-8")
-                 .replace(REQUIRES, 'requires = ">=0.7.0"\n')})
+                 .replace(REQUIRES, 'requires = ">=0.8.0"\n')})
     out = drift(host, "--no-fetch")
     lines = reports(out)
     assert lines[0].startswith("WARN ") and "outside requires" in lines[0]
@@ -376,9 +393,10 @@ def test_help_explains_every_report_and_its_action(tmp):
     host = make_host(tmp / "h", REQUIRES + APP_CONSUMES)
     out = drift(host, "--help")
     assert out.returncode == 0
-    for code in ("No drift", "PENDING", "CHANGED", "SUPERSEDED", "STATUS", "MISSING", "NEW", "DEPRECATED", "WARN"):
+    for code in ("No drift", "PENDING", "CHANGED", "SUPERSEDED", "PARTIAL", "STATUS", "MISSING", "NEW", "WARN"):
         assert f"\n  {code}" in out.stdout, code
-    assert out.stdout.count("Action:") >= 7
+    assert "DEPRECATED" not in out.stdout
+    assert out.stdout.count("Action:") >= 8
     for usage in ("--hash decision <record path> <decision-name>", "--hash rule <rule-id>", "--no-fetch", "--ref"):
         assert usage in out.stdout
 

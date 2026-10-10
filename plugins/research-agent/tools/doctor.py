@@ -13,19 +13,17 @@ Each item prints as FAIL, WARN or DEPRECATED with its check number. Exit codes: 
 1 at least one FAIL (the run or setup stops); 2 the doctor could not run. Environment variables
 are named, never printed.
 
-Checks (0.6.x; "legacy" is a repository with no config whose CLAUDE.md has a "Research" section):
-  1  the config parses, has no unknown key, and requires includes the installed version
-     (legacy: DEPRECATED, range not checked)
+Checks:
+  1  the config exists, parses, has no unknown key, and requires includes the installed version
   2  every fixed path and configured file exists
   3  the brief has headings 1 to 9 and its §6 "Domain rules:" line names the domain rules file
   4a the domain rules have headings 1 to 8; each ### rule has Check, Scope, Source and Added;
-     IDs are unique kebab-case; each Host: names the configured consumer (legacy: a Host: line
-     is DEPRECATED, since it cannot be checked without a config)
-  4b a rule is still a bullet with no ID (DEPRECATED; FAIL from 0.7.0)
+     IDs are unique kebab-case; each Host: names the configured consumer
+  4b a rule is still a bullet with no ID
   5  the queue has the required columns and known statuses; each prompt file exists; each
      prerequisite names a task row (case ignored) or is "none"
   6  each decision header parses, has the core keys, and matches its INDEX.md row on name and status
-  7  CLAUDE.md points to research-agent.toml (legacy: DEPRECATED)
+  7  CLAUDE.md points to research-agent.toml
   8  consumer: each kit file's stamp names a version inside requires and its hash matches; the
      lock parses
   9  FETCH_RAW_IDENTITY_HOSTS equals [project.fetch_identity] and each variable it names is set
@@ -54,7 +52,6 @@ import yaml
 
 PLUGIN_ROOT = Path(__file__).resolve().parents[1]
 CONFIG = "research-agent.toml"
-LEGACY_LINE = "legacy CLAUDE.md prose (deprecated; removed in 0.7.0)"
 KIT_FILES = ("INTEGRATION.md", "research_drift.py")
 LOCK = "docs/research-lock.md"
 STATUSES = {"todo", "waiting on requester", "in review", "accepted", "rejected", "deferred"}
@@ -104,9 +101,6 @@ class Report:
     def warn(self, check: str, message: str) -> None:
         self.add("WARN", check, message)
 
-    def deprecated(self, check: str, message: str) -> None:
-        self.add("DEPRECATED", check, message)
-
     def levels(self, check: str | None = None) -> list[str]:
         return [lvl for lvl, c, _ in self.items if check is None or c == check]
 
@@ -124,7 +118,6 @@ class Layout:
     decisions: str
     context: str | None
     consumer: str | None
-    legacy: bool
 
 
 # ---------- versions ----------
@@ -286,45 +279,6 @@ def config_layout(project: dict) -> Layout:
         decisions=f"{root}/decisions",
         context=f"{root}/{consumer['context']}" if consumer.get("context") else None,
         consumer=consumer.get("name"),
-        legacy=False,
-    )
-
-
-LEGACY_LABELS = {"brief": "brief", "domain rules": "rules", "queue": "queue", "prompts": "prompts",
-                 "logs": "logs", "decision records": "decisions", "decisions": "decisions"}
-
-
-def legacy_layout(claude_md: str | None) -> Layout | None:
-    """Paths from a 0.5.0-style CLAUDE.md "Research" section, or None when there is none."""
-    if not claude_md:
-        return None
-    match = re.search(r"^## Research\s*$(.*?)(?=^## |\Z)", claude_md, flags=re.MULTILINE | re.DOTALL)
-    if not match:
-        return None
-    paths: dict[str, str] = {}
-    for line in match.group(1).split("\n"):
-        item = re.match(r"^\s*[-*]\s+([^:`]{1,40}):\s*`([^`]+)`", line)
-        if not item:
-            continue
-        label, path = item.group(1).strip().lower(), item.group(2).strip()
-        key = LEGACY_LABELS.get(label) or ("context" if label.endswith("context") else None)
-        if key and key not in paths:
-            if "<" in path:  # a pattern such as decisions/<topic>-<date>.md names its folder
-                prefix = path.split("<")[0]
-                path = prefix if prefix.endswith("/") else prefix.rsplit("/", 1)[0]
-            paths[key] = path.strip("/")
-    root = paths["queue"].rsplit("/", 1)[0] if "/" in paths.get("queue", "") else "docs/research"
-    return Layout(
-        root=root,
-        brief=paths.get("brief", f"{root}/strategy-research-brief.md"),
-        rules=paths.get("rules", f"{root}/domain-rules.md"),
-        queue=paths.get("queue", f"{root}/research-queue.md"),
-        prompts=paths.get("prompts", f"{root}/prompts"),
-        logs=paths.get("logs", f"{root}/logs"),
-        decisions=paths.get("decisions", f"{root}/decisions"),
-        context=paths.get("context"),
-        consumer=None,
-        legacy=True,
     )
 
 
@@ -359,7 +313,7 @@ def check_brief(repo: Path, lay: Layout, report: Report) -> None:
 
 
 def parse_rules(text: str) -> tuple[set[int], list[dict], list[tuple[int, str]]]:
-    """(numbered headings, rules, legacy bullet rules as (heading, text))."""
+    """(numbered headings, rules, bullet rules without an ID as (heading, text))."""
     lines = strip_fences(text)
     heading, rule = None, None
     rules, bullets = [], []
@@ -407,17 +361,14 @@ def check_rules(repo: Path, lay: Layout, report: Report) -> None:
             report.fail("4a", f"{where}: rule {rid} Scope must be decision-critical or all")
         if fields.get("Added") and not DATE.match(fields["Added"]):
             report.fail("4a", f"{where}: rule {rid} Added must be YYYY-MM-DD")
-        if "Host" in fields and lay.legacy:
-            report.deprecated("4a", f"{where}: rule {rid} Host cannot be checked without a config; "
-                                    f"write {CONFIG} with [project.consumer]")
-        elif "Host" in fields and fields["Host"] != lay.consumer:
+        if "Host" in fields and fields["Host"] != lay.consumer:
             expected = f"the configured consumer {lay.consumer!r}" if lay.consumer else "a configured [project.consumer]"
             report.fail("4a", f"{where}: rule {rid} Host {fields['Host']!r} is not {expected}")
     if bullets:
         under = sorted({h for h, _ in bullets})
-        report.deprecated("4b", f"{lay.rules}: {len(bullets)} rule(s) written as bullets without an ID, "
-                                f"under headings {', '.join(map(str, under))}; give each a ### rule ID "
-                                "(fails from 0.7.0)")
+        report.fail("4b", f"{lay.rules}: {len(bullets)} rule(s) written as bullets without an ID, "
+                          f"under headings {', '.join(map(str, under))}; give each a ### rule ID "
+                          "with Check, Scope, Source and Added lines")
 
 
 def check_queue(repo: Path, lay: Layout, report: Report) -> None:
@@ -510,14 +461,8 @@ def check_decisions(repo: Path, lay: Layout, report: Report) -> None:
 
 # ---------- check 7: the pointer ----------
 
-def check_pointer(repo: Path, legacy: bool, report: Report) -> None:
-    text = read(repo / "CLAUDE.md") or ""
-    if CONFIG in text:
-        return
-    if legacy:
-        report.deprecated("7", f'CLAUDE.md lists research paths in prose instead of pointing to {CONFIG} '
-                               "(fails from 0.7.0)")
-    else:
+def check_pointer(repo: Path, report: Report) -> None:
+    if CONFIG not in (read(repo / "CLAUDE.md") or ""):
         report.fail("7", f"CLAUDE.md does not point to {CONFIG}")
 
 
@@ -655,34 +600,28 @@ def diagnose(repo: Path, mode: str) -> tuple[Report, str]:
     report = Report(mode)
     version = installed_version()
     config_path = repo / CONFIG
-    data: dict = {}
-    if config_path.is_file():
-        config_line = CONFIG
-        try:
-            data = tomllib.loads(read(config_path) or "")
-        except tomllib.TOMLDecodeError as exc:
-            report.fail("1", f"{CONFIG} does not parse: {exc}")
-            return report, config_line
-        check_config(data, version, report)
-        project = data.get("project") if isinstance(data.get("project"), dict) else None
-        consumes = data.get("consumes") if isinstance(data.get("consumes"), dict) else None
-        layout = config_layout(project) if project is not None else None
-    else:
-        layout = legacy_layout(read(repo / "CLAUDE.md"))
-        if layout is None:
-            report.fail("1", f"no {CONFIG}, and CLAUDE.md has no \"Research\" section to read instead")
-            return report, "none"
-        config_line = LEGACY_LINE
-        report.deprecated("1", f"no {CONFIG}: paths read from the CLAUDE.md \"Research\" section; "
-                               "write the config (/new-research-project, adopt mode)")
-        project, consumes = {}, None
+    if not config_path.is_file():
+        prose = re.search(r"^## Research\s*$", read(repo / "CLAUDE.md") or "", flags=re.MULTILINE)
+        hint = "adopt mode: CLAUDE.md has a \"Research\" section" if prose else "new mode"
+        report.fail("1", f"no {CONFIG}; write it with /new-research-project ({hint})")
+        return report, "none"
+    config_line = CONFIG
+    try:
+        data = tomllib.loads(read(config_path) or "")
+    except tomllib.TOMLDecodeError as exc:
+        report.fail("1", f"{CONFIG} does not parse: {exc}")
+        return report, config_line
+    check_config(data, version, report)
+    project = data.get("project") if isinstance(data.get("project"), dict) else None
+    consumes = data.get("consumes") if isinstance(data.get("consumes"), dict) else None
+    layout = config_layout(project) if project is not None else None
     if layout is not None:
         check_paths(repo, layout, report)
         check_brief(repo, layout, report)
         check_rules(repo, layout, report)
         check_queue(repo, layout, report)
         check_decisions(repo, layout, report)
-    check_pointer(repo, layout is not None and layout.legacy, report)
+    check_pointer(repo, report)
     if consumes is not None:
         check_kit(repo, data.get("requires"), report)
     if project:

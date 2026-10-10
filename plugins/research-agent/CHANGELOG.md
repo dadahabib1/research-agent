@@ -4,6 +4,24 @@ Every change to the plugin, by release. A pull request adds a line under `## Unr
 
 ## Unreleased
 
+## 0.7.0 (2026-10-10)
+
+Parallel runs, the model named by reference, and the removals 0.6.0 announced. A contract change: every host edits its `requires` line (`UPGRADING.md`). Design: `docs/design/0.7.0.md`.
+
+- Added: `tools/next_task.py`, the selector `/run-next-task` runs at step 1 (#28). It reads the queue on the remote's default branch and skips a `todo` task whose branch `research/<topic>` another run holds: claimed, in review, waiting on requester, or merged. It resumes a stopped run, and it claims the task it takes by pushing an empty claim commit without force, so of two sessions started together that pick one task, one push is rejected and that session takes the next task. A closed, unmerged pull request frees its task. `/run-next-task <topic>` runs a named task, which may resume a run waiting on the requester, take over a crashed run or re-run a merged task. `--list` prints every task's state.
+- Changed: runs no longer edit the queue, so two runs' pull requests no longer conflict on its table (#28). A run's status lives in its hand-back, which now also ends the log; the decision session sets the task's row to `accepted`, `rejected` or `deferred` in its own pull request. A resumed run replaces the hand-back in its pull request. A stopped run is resumed by the next session without anyone editing the queue. With a remote but no `gh`, a run pushes its branch.
+- Changed: where the host forbids model identifiers in the repository, the deliverable's heading, the log header and the hand-back's Spend line in the log and the pull request write `by reference`, and the session's closing message names the model (#42).
+- Added: the drift tool's `PARTIAL` report, for an accepted decision not yet in the lock that supersedes a quoted part of a pinned decision. It stops once the new decision is pinned. 0.6.1 deferred it here (#14).
+- Removed, as deprecated in 0.6.0: the fallback that read research paths from the `CLAUDE.md` "Research" section (the doctor FAILs check 1 without `research-agent.toml` and names the setup mode to run; the drift tool exits 2 on a research repository with no config on the ref), and domain rules written as bullets without an ID (check 4b FAILs).
+- Kit: both files changed (the drift tool's reports; `INTEGRATION.md` for contract 0.7 and the queue), so consumers copy the kit again.
+
+### Contract
+
+- Added: the run states (running, stopped, waiting, in review, done, abandoned, free) and the selection rule over them; the claim commit and its subject `research-agent claim: research/<topic> <token>`; `/run-next-task <topic>`; the selector's command line, output and exit codes; the log's last section, Hand-back; `by reference` in place of the model; the drift report `PARTIAL`; the drift tool's exit 2 for a research repository without a config.
+- Changed: the selection rule now skips a `todo` row whose run is running, in review, waiting or done, and resumes a stopped one; whoever adds a task writes `todo`, and the decision session writes `accepted`, `rejected` or `deferred`; a run writes no queue status; the hand-over claims the branch at selection, and with a remote but no `gh` pushes it; the hand-back is also the log's last section, and its Plugin line drops `legacy prose`.
+- Removed: the legacy prose config and its log line; domain rules as bullets without an ID; the doctor's DEPRECATED items for checks 1, 4a, 4b and 7.
+- Unchanged: queue statuses and columns (doctor check 5), skill and agent names, the branch name, the log path, the hand-back's labels, the lock, the kit's paths and command lines, and the `fetch_raw` tool.
+
 ## 0.6.2 (2026-10-10)
 
 Nineteen lesson issues from runs under 0.6.1, folded into ten new takeaways and seven amendments. The protocol's steps, the hand-back, the kit's code and the contract are unchanged.

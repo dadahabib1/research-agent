@@ -15,7 +15,7 @@ What a host that adopts this plugin may depend on: names, paths, formats and beh
 At the repository root. It holds only what differs between hosts; everything else is fixed below. Unknown keys are an error.
 
 ```toml
-requires = ">=0.6.0, <0.7.0"           # required
+requires = ">=0.7.0, <0.8.0"           # required
 
 [project]                               # present when research runs in this repository
 root = "docs/research"                  # required
@@ -39,9 +39,7 @@ research = "owner/repo"                 # required: owner/repo, or "self" for re
 clone = "../repo"                       # optional; default ../<repo name>, relative to this repository's root
 ```
 
-A file has `[project]`, `[consumes]` or both. `research = "self"` needs `[project]`. `CLAUDE.md` points to the file and does not repeat its paths.
-
-**Deprecated in 0.6.0; removed in 0.7.0:** a repository without `research-agent.toml` whose `CLAUDE.md` has a "Research" section is read as in 0.5.0: the paths come from that section's `- <Label>: <path in backticks>` lines (Brief, Domain rules, Queue, Prompts, Logs, Decision records, and a line whose label names a context file). Logs then record `config: legacy CLAUDE.md prose (deprecated; removed in 0.7.0)`.
+A file has `[project]`, `[consumes]` or both. `research = "self"` needs `[project]`. `CLAUDE.md` points to the file and does not repeat its paths. A repository without the file fails the doctor's check 1; research paths are never read from `CLAUDE.md` prose (removed in 0.7.0).
 
 ## The research project's layout
 
@@ -74,13 +72,34 @@ Each rule is a `###` subsection under its heading:
 - Retired: YYYY-MM-DD; <reason>              (optional)
 ```
 
-The ID is kebab-case, unique in the file, never renamed or reused. A rule is never deleted; it is retired. Prompts, delegations and reviews cite rules by ID.
-
-**Deprecated in 0.6.0; removed in 0.7.0:** rules written as bullets without an ID.
+The ID is kebab-case, unique in the file, never renamed or reused. A rule is never deleted; it is retired. Prompts, delegations and reviews cite rules by ID. A rule written as a bullet without an ID fails the doctor's check 4b (removed in 0.7.0).
 
 ### The queue
 
-`research-queue.md` holds one table with at least the columns Task, Prompt, Deliverable, Prerequisites and Status; more columns are allowed. Prompt paths are relative to `root`. Prerequisites name task rows, comma-separated and matched case-insensitively, or "none". Statuses: `todo`, `waiting on requester`, `in review`, `accepted`, `rejected`, `deferred`. Selection rule: the first `todo` row in table order whose prerequisites are all `accepted`.
+`research-queue.md` holds one table with at least the columns Task, Prompt, Deliverable, Prerequisites and Status; more columns are allowed. Prompt paths are relative to `root`. Prerequisites name task rows, comma-separated and matched case-insensitively, or "none". Statuses: `todo`, `waiting on requester`, `in review`, `accepted`, `rejected`, `deferred`.
+
+**Who writes a status.** Whoever adds a task writes `todo`. The decision session writes `accepted`, `rejected` or `deferred` on the default branch, in its pull request. Runs never edit the queue. A task's row therefore stays `todo` while its run is open, in review or waiting; that state is the run's, read from its branch and its hand-back. `in review` and `waiting on requester` stay valid for a project that sets them by hand; a row so set is not `todo`, so no run takes it.
+
+**A run's state** comes from its branch `research/<topic>`, the latest pull request from that branch, and the Status in that pull request body's last `## Hand-back` block. The first line that holds gives the state:
+
+| State | When |
+|---|---|
+| running | the branch's last commit is a claim commit (subject `research-agent claim: research/<topic> <token>`) |
+| stopped, waiting or in review | the latest pull request is open, and its hand-back Status is `stopped: <reason>`, `waiting on requester`, or anything else (or it has no hand-back) |
+| done | the latest pull request was merged, or the log `<root>/logs/<topic>-log.md` is on the default branch |
+| abandoned | the latest pull request was closed unmerged, and the branch still exists |
+| running | the branch exists with no pull request |
+| free | otherwise: no branch, and no open or merged pull request |
+
+**Selection rule:** the first `todo` row in table order whose prerequisites are all `accepted` and whose run is free, abandoned or stopped. A stopped run is resumed on its branch; a free or abandoned task starts from the default branch. `/run-next-task <topic>` takes the named row (by deliverable stem or task name, case ignored) when it is `todo` with its prerequisites accepted, and may also resume a waiting or running run (a running one only when no session is running it, such as after a crash) or re-run a done task; it never takes a task in review. To abandon a run, close its pull request; to keep a task from running, set its row to `deferred`.
+
+**The claim.** Before it starts, a run claims its task's branch with an empty commit on top of the default branch (a new run) or of the branch's tip (a resumed run), pushed without force; a replaced abandoned or done branch is pushed with `--force-with-lease` on the tip the run read. Of two runs that pick the same row, one push is rejected, and that run takes the next row. A run commits nothing else on the branch until it hands over.
+
+**Modes.** With a remote named `origin` and a `gh` that can read its pull requests, states come from pull requests as above. With a remote but no such `gh`, after the claim-commit line: a run is done when its log is on the default branch; otherwise the hand-back at the end of the branch's log stands in for the pull request's and gives stopped, waiting or in review, and a branch whose log has none is running. The claim is pushed the same way. With no remote, the same rule reads local branches, one run at a time per clone, with no claim commit.
+
+### The selector
+
+`uv run --script ${CLAUDE_PLUGIN_ROOT}/tools/next_task.py [--topic NAME] [--list] [--project PATH]` applies the selection rule and the claim, and checks the branch out; `/run-next-task` runs it at step 1. It prints `selected: new <topic>` or `selected: resume <topic>`, then `task:`, `prompt:`, `branch:`, `pull request:`, `mode:` (`pull requests`, `branches (<reason>)` or `local (no remote)`) and one `passed over: <topic>: <reason>` line per row it skipped. `--list` prints each row's status, state, topic and pull request or branch, and claims nothing. Exit codes: 0 a task selected (or `--list` printed); 1 no row qualifies (each row's reason follows `none:`); 2 the selector could not run.
 
 ### Prompts
 
@@ -106,11 +125,12 @@ A project may add keys. The prose fields that follow keep the names Status, Deci
 ## What a run writes
 
 - The deliverable at `<root>/<topic>.md`, headed with run date, shape, model, effort and plugin version.
-- The log at `<root>/logs/<topic>-log.md`, with the sections of `templates/log.md`: Intake record, Frame and plan, Searches, Sources, Dead ends, Flagged content, Verification, Applied rules, Self-review, Review findings, Spend. Its header records the config line (`config: research-agent.toml`, or the legacy line above) and the doctor's WARN and DEPRECATED items.
-- The notes files, scripts and fixtures, and the queue row's status: `in review` or `waiting on requester`.
-- **Hand-over:** a branch `research/<topic>` and a pull request against the remote's default branch. With no remote or no `gh`, the run commits on the branch and the hand-back says `pull request: none`.
+- The log at `<root>/logs/<topic>-log.md`, with the sections of `templates/log.md`: Intake record, Frame and plan, Searches, Sources, Dead ends, Flagged content, Verification, Applied rules, Self-review, Review findings, Spend, and last the Hand-back. Its header records the config line (`config: research-agent.toml`) and the doctor's WARN and DEPRECATED items.
+- The notes files, scripts and fixtures.
+- **Model by reference.** Where the host's instructions forbid writing model identifiers into the repository, the deliverable's heading, the log header and the hand-back's Spend line in the log and the pull request body write `by reference` in place of the model, and the session's closing message names it.
+- **Hand-over:** the claim commit (see "The queue"), then the run's commits on the branch `research/<topic>`, and a pull request against the remote's default branch; a resumed run updates its pull request. With a remote but no `gh`, the run pushes the branch; with no remote, it commits on the branch. Either way the hand-back says `pull request: none`.
 
-A run never writes decision records, never edits the domain rules, never merges, and never writes to the plugin's own files.
+A run never edits the queue, never writes decision records, never edits the domain rules, never merges, and never writes to the plugin's own files.
 
 ### Applied rules
 
@@ -123,7 +143,7 @@ The log's Applied rules table, one row per question group and rule in scope:
 
 ### The hand-back
 
-Every run ends with this block, as the last section of the pull request body and as the session's last message. A host finds it by its heading and reads it by its labels.
+Every run ends with this block, as the last section of the log and of the pull request body, and as the session's last message. A host finds it by its heading and reads it by its labels; the selector reads its Status.
 
 ```markdown
 ## Hand-back
@@ -139,16 +159,16 @@ Every run ends with this block, as the last section of the pull request body and
 - Lesson candidates:
   - [tool] <rule>. Incident: <what happened in this run, in field-neutral words>. Check: <how a reviewer verifies it>.
   - [field] <rule ID, or "new">: <proposed rule>. Incident: <…>. Check: <…>.
-- Spend: <tokens or cost>; model <model>; effort <level>
+- Spend: <tokens or cost>; model <model, or "by reference">; effort <level>
 - Paths: deliverable `<path>`; log `<path>`; notes `<paths>`; scripts `<paths>`; branch `research/<topic>`; pull request <URL | none>
-- Plugin: research-agent <version>; config <research-agent.toml | legacy prose>
+- Plugin: research-agent <version>; config research-agent.toml
 ```
 
 Proposed decisions are proposals; only the decider decides, in a decision session. `[tool]` lessons are filed as issues labelled `lesson` on the plugin's repository (`repository` in `plugin.json`). `[field]` lessons reach the domain rules through the decision session.
 
 ## The doctor
 
-`uv run --script ${CLAUDE_PLUGIN_ROOT}/tools/doctor.py --mode run|setup [--project PATH]` compares the config with the files on disk. `/new-research-project` runs it last with `--mode setup`; `/run-next-task` runs it at step 0 with `--mode run`. Each item prints on its own line as `FAIL`, `WARN` or `DEPRECATED` with its check number; the output names environment variables, never their values. Exit codes: 0 no FAIL; 1 at least one FAIL (the run or setup stops); 2 the doctor could not run. `--help` lists the checks. The identity check FAILs with `--mode run` and WARNs with `--mode setup` when `[project.fetch_identity]` and `FETCH_RAW_IDENTITY_HOSTS` differ or a named variable is unset; when the environment map is set but the config declares none, it WARNs in both modes. On the legacy prose config, a rule's `Host:` line is DEPRECATED, not checked, because there is no configured consumer to compare it with.
+`uv run --script ${CLAUDE_PLUGIN_ROOT}/tools/doctor.py --mode run|setup [--project PATH]` compares the config with the files on disk. `/new-research-project` runs it last with `--mode setup`; `/run-next-task` runs it at step 0 with `--mode run`. Each item prints on its own line as `FAIL`, `WARN` or `DEPRECATED` with its check number; the output names environment variables, never their values. Exit codes: 0 no FAIL; 1 at least one FAIL (the run or setup stops); 2 the doctor could not run. `--help` lists the checks. The identity check FAILs with `--mode run` and WARNs with `--mode setup` when `[project.fetch_identity]` and `FETCH_RAW_IDENTITY_HOSTS` differ or a named variable is unset; when the environment map is set but the config declares none, it WARNs in both modes.
 
 ## The consumer kit
 
@@ -164,7 +184,7 @@ python .research-agent/research_drift.py --hash rule <rule-id>
 python .research-agent/research_drift.py --help
 ```
 
-Exit codes: 0 no drift; 1 drift or pending rows; 2 setup error. Reports: `PENDING`, `CHANGED`, `SUPERSEDED`, `STATUS`, `MISSING`, `NEW`; `--help` gives each one's meaning and action. A decision's hash is of its subsection, from its `### <name>:` heading to the next `###` or `##` heading: lines right-stripped, joined with `\n`, sha256, first 12 hex characters. A rule's hash is the same on the domain rules file.
+Exit codes: 0 no drift; 1 drift or pending rows; 2 setup error, including a research repository with no `research-agent.toml` on the ref. Reports: `PENDING`, `CHANGED`, `SUPERSEDED`, `PARTIAL`, `STATUS`, `MISSING`, `NEW`; `--help` gives each one's meaning and action. `SUPERSEDED` names a pinned decision that an accepted decision's `supersedes` list names alone, bare or quoted; `PARTIAL` names one that an accepted decision not yet in the lock supersedes in part, as a quoted item that starts with the pinned decision's name (`"<decision> rule 2, detection only"`), and stops once that decision is pinned. A decision's hash is of its subsection, from its `### <name>:` heading to the next `###` or `##` heading: lines right-stripped, joined with `\n`, sha256, first 12 hex characters. A rule's hash is the same on the domain rules file.
 
 ### The lock: `docs/research-lock.md`
 
@@ -184,7 +204,7 @@ A Research commit of `pending <PR URL>` marks a row that waits for a research me
 
 ## Skills and agents
 
-- Skills: `research-protocol`, `research-writing`, `run-next-task` (`/run-next-task`), `new-research-project` (`/new-research-project`, modes new, adopt and consumer).
+- Skills: `research-protocol`, `research-writing`, `run-next-task` (`/run-next-task`, or `/run-next-task <topic>` for a named task), `new-research-project` (`/new-research-project`, modes new, adopt and consumer).
 - Agents, invoked by their plugin-scoped names as `subagent_type`: `research-agent:researcher` (web search and fetch only; launched without the user, project and local `CLAUDE.md` files, so project facts reach it only through the delegation prompt), `research-agent:reviewer` (reads and runs scripts; no web). A project that configures a raw-page fetcher as an MCP server named `firecrawl` makes its search and scrape tools available to the researcher; no other project tool reaches it. A project that needs a different fetch server may place its own `.claude/agents/researcher.md` with `name: researcher`, the same frontmatter and body, and a `tools:` line that names its server's search and scrape tools and nothing else; `/run-next-task` then calls it by the bare name `researcher` in place of the plugin's.
 
 ## Raw fetch tool

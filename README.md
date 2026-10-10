@@ -1,6 +1,6 @@
 # research-agent
 
-A Claude Code plugin that a project installs to run evidence-based research tasks: a protocol, a session loop that runs one queued task per session and ends in a pull request, and two subagents. It is a tool. A project describes itself in one config file, `research-agent.toml`; the plugin reads it with the project's brief, domain rules and queue, and writes only into that project's repository: the deliverable, a log, scripts, a queue status and a pull request. It never writes to its own files, never merges, and never records a decision; a person does that in the project's decision session.
+A Claude Code plugin that a project installs to run evidence-based research tasks: a protocol, a session loop that runs one queued task per session and ends in a pull request, and two subagents. It is a tool. A project describes itself in one config file, `research-agent.toml`; the plugin reads it with the project's brief, domain rules and queue, and writes only into that project's repository: the deliverable, a log, scripts, its branch and a pull request. It never writes to its own files, never edits the queue, never merges, and never records a decision; a person does that in the project's decision session.
 
 ## Contents
 
@@ -10,6 +10,7 @@ A Claude Code plugin that a project installs to run evidence-based research task
   - `run-next-task` (invoked as /run-next-task): the session loop;
   - `new-research-project` (invoked as /new-research-project): sets a repository up in one of three modes (new, adopt or upgrade, consumer) and ends with the doctor.
 - **Doctor:** `tools/doctor.py`, which compares the config with the files and stops a run on any mismatch.
+- **Selector:** `tools/next_task.py`, which picks a run's task from the queue and claims its branch, so sessions started together take different tasks; `--list` shows each task's state.
 - **Consumer kit:** `kit/INTEGRATION.md` (the integration prompt a host follows) and `kit/research_drift.py` (the drift check on pinned decisions and rules), copied into a host's `.research-agent/` by setup.
 - **Agents:** `researcher` (web search and fetch only; effort xhigh) and `reviewer` (reads and runs scripts; no web; effort high).
 - **Raw fetch tool:** `fetch_raw`, a bundled read-only MCP server (`plugins/research-agent/servers/fetch_raw/`) that returns a page's own text, not a summary. See "Raw page fetcher" below.
@@ -26,14 +27,14 @@ Pin a release tag; `/new-research-project` writes this for you.
 ```json
 {
   "extraKnownMarketplaces": {
-    "personal-agents": { "source": { "source": "github", "repo": "dadahabib1/research-agent", "ref": "v0.6.0" } }
+    "personal-agents": { "source": { "source": "github", "repo": "dadahabib1/research-agent", "ref": "v0.7.0" } }
   },
   "enabledPlugins": { "research-agent@personal-agents": true }
 }
 ```
 
   Claude Code installs it once the folder is trusted.
-- **Manually:** run `/plugin marketplace add dadahabib1/research-agent@v0.6.0`, then `/plugin install research-agent@personal-agents`.
+- **Manually:** run `/plugin marketplace add dadahabib1/research-agent@v0.7.0`, then `/plugin install research-agent@personal-agents`.
 - **Adopting from another agent:** give the agent `plugins/research-agent/kit/INTEGRATION.md`; it says how to set up, add a task, run it, read the hand-back and keep pins current.
 - **For claude.ai chat and Cowork:** zip `plugins/research-agent/skills/research-protocol/` and upload it as a skill.
 
@@ -45,7 +46,7 @@ Pin a release tag; `/new-research-project` writes this for you.
   - **consumer:** installs the kit in a system that builds on research held in another repository (or in its own, with `research = "self"`).
 
   It never overwrites project content, and re-running it on a passing project changes nothing. It ends when the doctor reports no FAIL.
-- **Each research session:** `/run-next-task`. It runs the doctor, takes the first todo task whose prerequisites are accepted, runs it under the protocol, and opens a pull request that ends with a fixed `## Hand-back` block. Decisions are made afterwards, in a decision session, by the decider the config names.
+- **Each research session:** `/run-next-task`. It runs the doctor, takes the first todo task whose prerequisites are accepted and that no other run holds, claims its branch, runs it under the protocol, and opens a pull request that ends with a fixed `## Hand-back` block. Sessions started together take different tasks; `/run-next-task <topic>` runs a named one. Runs leave the queue alone: a task's row stays `todo` until the decision session, and its run's state (in review, waiting on requester, stopped) is in the pull request's hand-back. Decisions are made afterwards, in a decision session, by the decider the config names, which also sets the row.
 - **Consumers:** `python .research-agent/research_drift.py` reports pinned decisions and rules that changed, were superseded or disappeared on the research repository's main branch; `--help` gives the action for each report.
 - Domain rules are the project's: when information counts as known, what settles each claim type in the field, standard methods, units and denominators, feasibility at the requester's scale, data sources and licences, advice boundaries. The plugin holds only general rules.
 
@@ -81,7 +82,7 @@ uv is pre-installed in cloud sessions. Three settings in the cloud environment:
 3. **Setup script:** repository settings do not install plugins in cloud sessions, so the setup script installs the pinned release and caches the server's dependencies. Its first line names the tag; changing that line changes the script, which rebuilds the cached environment.
 
 ```bash
-PLUGIN_REF=v0.6.0
+PLUGIN_REF=v0.7.0
 claude plugin marketplace add "dadahabib1/research-agent@${PLUGIN_REF}" && claude plugin install research-agent@personal-agents || true
 mkdir -p /tmp/fetch-raw && cd /tmp/fetch-raw \
   && curl -fsSL -O "https://raw.githubusercontent.com/dadahabib1/research-agent/${PLUGIN_REF}/plugins/research-agent/servers/fetch_raw/server.py" \
@@ -95,7 +96,7 @@ A project may also configure Firecrawl's own MCP server in its `.mcp.json` under
 
 ### Tests
 
-From `plugins/research-agent/`: `uv run --script tools/tests/run.py` tests the doctor, and `uv run --script kit/tests/run.py` tests the drift tool (it needs git). From `plugins/research-agent/servers/fetch_raw/`: `uv run --script tests/run.py` runs the fetcher's unit tests, which use synthetic fixtures and no network. `uv run --script tests/run.py -m live` fetches real pages (NYSE, Interactive Brokers, an SEC 10-K when `EDGAR_IDENTITY` is set, arXiv, and one Firecrawl call when `FIRECRAWL_API_KEY` is set).
+From `plugins/research-agent/`: `uv run --script tools/tests/run.py` tests the doctor and the selector, and `uv run --script kit/tests/run.py` tests the drift tool (it needs git). From `plugins/research-agent/servers/fetch_raw/`: `uv run --script tests/run.py` runs the fetcher's unit tests, which use synthetic fixtures and no network. `uv run --script tests/run.py -m live` fetches real pages (NYSE, Interactive Brokers, an SEC 10-K when `EDGAR_IDENTITY` is set, arXiv, and one Firecrawl call when `FIRECRAWL_API_KEY` is set).
 
 ## Unattended runs
 
