@@ -1,5 +1,5 @@
-"""The doctor: one fixture project per FAIL item, a valid project, the legacy fallback (§3 per-check
-table), an equity-shaped project after adoption, and the command line."""
+"""The doctor: one fixture project per FAIL item, a valid project, a project with no config, an
+equity-shaped project after adoption, and the command line."""
 
 import shutil
 import subprocess
@@ -68,13 +68,14 @@ FAIL_CASES = {
     "config-unknown-nested-key": ("1", lambda r: edit(r, CONFIG, 'name = "demo-app"', 'name = "demo-app"\nurl = "x"')),
     "config-missing-key": ("1", lambda r: edit(r, CONFIG, 'decider = "requester"\n', "")),
     "config-wrong-type": ("1", lambda r: edit(r, CONFIG, 'env = ["DEMO_API_KEY"]', 'env = "DEMO_API_KEY"')),
-    "config-requires-excludes-installed": ("1", lambda r: edit(r, CONFIG, '">=0.6.0, <0.7.0"', '"<0.6.0"')),
-    "config-requires-malformed": ("1", lambda r: edit(r, CONFIG, '">=0.6.0, <0.7.0"', '"~0.6"')),
+    "config-requires-excludes-installed": ("1", lambda r: edit(r, CONFIG, '">=0.7.0, <0.8.0"', '">=0.6.0, <0.7.0"')),
+    "config-requires-malformed": ("1", lambda r: edit(r, CONFIG, '">=0.7.0, <0.8.0"', '"~0.7"')),
     "config-no-tables": ("1", lambda r: (r / CONFIG).write_text('requires = ">=0.6.0"\n', encoding="utf-8")),
     "config-self-without-project": ("1", lambda r: (r / CONFIG).write_text(
         'requires = ">=0.6.0"\n[consumes]\nresearch = "self"\n', encoding="utf-8")),
     "config-research-not-owner-repo": ("1", lambda r: edit(r, CONFIG, 'research = "self"', 'research = "equity"')),
     "no-config-no-prose": ("1", lambda r: ((r / CONFIG).unlink(), (r / "CLAUDE.md").write_text("# x\n", encoding="utf-8"))),
+    "no-config-with-prose": ("1", lambda r: (r / CONFIG).unlink()),
     # check 2: paths
     "missing-root": ("2", lambda r: edit(r, CONFIG, 'root = "docs/research"', 'root = "docs/other"')),
     "missing-brief": ("2", lambda r: (r / BRIEF).unlink()),
@@ -98,6 +99,9 @@ FAIL_CASES = {
     "rule-id-not-kebab": ("4a", lambda r: edit(r, RULES, "### known-at-publication:", "### Known At Publication:")),
     "rule-duplicate-id": ("4a", lambda r: edit(r, RULES, "### measurements-name-their-sample:", "### known-at-publication:")),
     "rule-host-not-consumer": ("4a", lambda r: edit(r, RULES, "- Host: demo-app", "- Host: other-app")),
+    # check 4b: a rule without an ID (deprecated in 0.6.0, a FAIL from 0.7.0)
+    "rule-bullet-without-id": ("4b", lambda r: edit(r, RULES, "## 3. Standard methods to reuse\n\nnone known",
+                                                    "## 3. Standard methods to reuse\n\n- Use the standard method. Check: it is cited.")),
     # check 5: the queue
     "queue-missing-column": ("5", lambda r: edit(r, QUEUE, "| Task | Prompt | Deliverable | Prerequisites |", "| Task | Prompt | Deliverable | Needs |")),
     "queue-unknown-status": ("5", lambda r: edit(r, QUEUE, "| requester | todo |", "| requester | started |")),
@@ -146,10 +150,10 @@ def test_each_fail_item(valid, case):
 
 
 def test_fail_items_cover_every_fail_check():
-    assert {check for check, _ in FAIL_CASES.values()} == {"1", "2", "3", "4a", "5", "6", "7", "8", "9"}
+    assert {check for check, _ in FAIL_CASES.values()} == {"1", "2", "3", "4a", "4b", "5", "6", "7", "8", "9"}
 
 
-# ---------- WARN and DEPRECATED items ----------
+# ---------- WARN items ----------
 
 def test_identity_check_warns_in_setup_mode(valid, monkeypatch):
     monkeypatch.delenv("DEMO_IDENTITY")
@@ -197,12 +201,6 @@ def test_gitignore_lines_warn(valid):
     assert len(report.items) == 2
 
 
-def test_bullet_rules_are_deprecated_with_config(valid):
-    edit(valid, RULES, "## 3. Standard methods to reuse\n\nnone known", "## 3. Standard methods to reuse\n\n- Use the standard method. Check: it is cited.")
-    report, _ = diagnose(valid, "run")
-    assert by_check(report) == {"4b": {"DEPRECATED"}}
-
-
 def test_fenced_and_quoted_examples_are_not_rules(valid):
     edit(valid, RULES, "## 4. Units, denominators and bases\n\nnone known",
          "## 4. Units, denominators and bases\n\n> ILLUSTRATIVE:\n>\n> ### Bad Id: example\n> - Check: x\n\n"
@@ -227,7 +225,7 @@ def test_consumer_context_older_than_release_tag_warns(tmp_path, monkeypatch):
     host = tmp_path / "app"
     host.mkdir()
     (host / "research-agent.toml").write_text(
-        f'requires = ">=0.6.0, <0.7.0"\n[consumes]\nresearch = "owner/research"\n', encoding="utf-8")
+        f'requires = ">=0.7.0, <0.8.0"\n[consumes]\nresearch = "owner/research"\n', encoding="utf-8")
     (host / "CLAUDE.md").write_text("Research: `research-agent.toml`\n", encoding="utf-8")
     (host / ".gitignore").write_text("__pycache__/\n*.pyc\n", encoding="utf-8")
     (host / "docs").mkdir()
@@ -253,7 +251,7 @@ def test_consumer_context_older_than_release_tag_warns(tmp_path, monkeypatch):
 def test_consumer_without_clone_warns(tmp_path):
     host = tmp_path / "app"
     host.mkdir()
-    (host / "research-agent.toml").write_text('requires = ">=0.6.0, <0.7.0"\n[consumes]\nresearch = "owner/nowhere"\n', encoding="utf-8")
+    (host / "research-agent.toml").write_text('requires = ">=0.7.0, <0.8.0"\n[consumes]\nresearch = "owner/nowhere"\n', encoding="utf-8")
     (host / "CLAUDE.md").write_text("`research-agent.toml`\n", encoding="utf-8")
     (host / ".gitignore").write_text("__pycache__/\n*.pyc\n", encoding="utf-8")
     (host / "docs").mkdir()
@@ -267,54 +265,23 @@ def test_consumer_without_clone_warns(tmp_path):
     assert by_check(report) == {"12": {"WARN"}}
 
 
-# ---------- legacy fallback: equity_research at 2712374 (§3 per-check table) ----------
+# ---------- no config: equity_research at 2712374, before adoption ----------
 
-def test_equity_2712374_passes_on_legacy_fallback(equity, monkeypatch):
-    monkeypatch.setenv("FETCH_RAW_IDENTITY_HOSTS", "sec.gov=WRONG")  # n/a on legacy: no map to compare
+def test_no_config_fails_check_1_and_names_the_setup_mode(equity, valid):
+    """The 0.6.x fallback that read paths from the CLAUDE.md "Research" section is gone (0.7.0)."""
     report, config_line = diagnose(equity, "run")
-    assert config_line == doctor.LEGACY_LINE
-    assert by_check(report) == {"1": {"DEPRECATED"}, "4b": {"DEPRECATED"}, "7": {"DEPRECATED"}, "11": {"WARN"}}
+    assert config_line == "none"
+    assert [(lvl, c) for lvl, c, _ in report.items] == [("FAIL", "1")]
+    assert "adopt mode" in report.items[0][2]
+    (valid / CONFIG).unlink()
+    (valid / "CLAUDE.md").write_text("# Demo\n", encoding="utf-8")
+    report, _ = diagnose(valid, "setup")
+    assert "new mode" in report.items[0][2]
 
 
-def test_equity_legacy_reads_the_prose_paths(equity):
-    layout = doctor.legacy_layout((equity / "CLAUDE.md").read_text(encoding="utf-8"))
-    assert layout.brief == "docs/research/strategy-research-brief.md"
-    assert layout.rules == "docs/research/domain-rules.md"
-    assert layout.queue == "docs/research/research-queue.md"
-    assert layout.decisions == "docs/research/decisions"
-    assert layout.prompts == "docs/research/prompts"
-    assert layout.logs == "docs/research/logs"
-    assert layout.context == "docs/research/app-context.md"
-    assert layout.root == "docs/research"
+# ---------- equity after adoption (§2 config): bullet rules fail until they get IDs ----------
 
-
-E = "docs/research"
-LEGACY_FAIL_CASES = {
-    "2-prose-path-missing": ("2", lambda r: (r / E / "app-context.md").unlink()),
-    "3-brief-heading": ("3", lambda r: edit(r, f"{E}/strategy-research-brief.md", "## 8. Open inputs", "## Open inputs")),
-    "4a-bad-rule": ("4a", lambda r: append(r, f"{E}/domain-rules.md", "\n### Bad Rule: no fields\n")),
-    "5-queue-prerequisite": ("5", lambda r: edit(r, f"{E}/research-queue.md", "| validation ladder |", "| validation ladders |")),
-    "6-index-status": ("6", lambda r: edit(r, f"{E}/decisions/INDEX.md", "| known-from-rule | accepted |", "| known-from-rule | deferred |")),
-}
-
-
-@pytest.mark.parametrize("case", sorted(LEGACY_FAIL_CASES))
-def test_legacy_checks_2_to_6_still_fail(equity, case):
-    check, mutate = LEGACY_FAIL_CASES[case]
-    mutate(equity)
-    report, _ = diagnose(equity, "run")
-    assert "FAIL" in by_check(report).get(check, set()), report.items
-
-
-def test_legacy_has_no_kit_identity_or_context_checks(equity, monkeypatch):
-    monkeypatch.setenv("FETCH_RAW_IDENTITY_HOSTS", "sec.gov=EDGAR_IDENTITY")
-    report, _ = diagnose(equity, "setup")
-    assert not {"8", "9", "10", "12"} & set(by_check(report))
-
-
-# ---------- equity after adoption (§2 config): passes with DEPRECATED bullet rules ----------
-
-EQUITY_CONFIG = '''requires = ">=0.6.0, <0.7.0"
+EQUITY_CONFIG = '''requires = ">=0.7.0, <0.8.0"
 
 [project]
 root = "docs/research"
@@ -342,27 +309,27 @@ def adopted(equity):
     return equity
 
 
-def test_equity_adopted_passes_with_deprecated_bullet_rules(adopted, monkeypatch):
+def test_equity_adopted_fails_only_on_its_bullet_rules(adopted, monkeypatch):
     monkeypatch.setenv("FETCH_RAW_IDENTITY_HOSTS", "sec.gov=EDGAR_IDENTITY")
     monkeypatch.setenv("EDGAR_IDENTITY", "name contact")
     monkeypatch.setenv("FRED_API_KEY", "k")
     report, config_line = diagnose(adopted, "run")
     assert config_line == "research-agent.toml"
-    assert by_check(report) == {"4b": {"DEPRECATED"}}
+    assert by_check(report) == {"4b": {"FAIL"}}
 
 
 def test_equity_adopted_setup_on_a_machine_without_the_secret(adopted):
     report, _ = diagnose(adopted, "setup")
-    assert by_check(report) == {"4b": {"DEPRECATED"}, "9": {"WARN"}, "10": {"WARN"}}
+    assert by_check(report) == {"4b": {"FAIL"}, "9": {"WARN"}, "10": {"WARN"}}
     run, _ = diagnose(adopted, "run")
-    assert by_check(run) == {"4b": {"DEPRECATED"}, "9": {"FAIL"}, "10": {"WARN"}}
+    assert by_check(run) == {"4b": {"FAIL"}, "9": {"FAIL"}, "10": {"WARN"}}
 
 
 def test_equity_adopted_with_rule_ids_and_host_line(adopted, monkeypatch):
     monkeypatch.setenv("FETCH_RAW_IDENTITY_HOSTS", "sec.gov=EDGAR_IDENTITY")
     monkeypatch.setenv("EDGAR_IDENTITY", "name contact")
     monkeypatch.setenv("FRED_API_KEY", "k")
-    rules = adopted / E / "domain-rules.md"
+    rules = adopted / R / "domain-rules.md"
     lines = rules.read_text(encoding="utf-8").replace("\r\n", "\n").split("\n")
     out, n, heading = [], 0, None
     for line in lines:
@@ -389,7 +356,8 @@ def run_cli(*args: str) -> subprocess.CompletedProcess:
 
 
 def test_cli_exit_codes(valid, equity, tmp_path):
-    assert run_cli("--mode", "setup", "--project", str(equity)).returncode == 0
+    no_config = run_cli("--mode", "setup", "--project", str(equity))
+    assert no_config.returncode == 1 and "FAIL       1" in no_config.stdout
     (valid / "CLAUDE.md").write_text("# Demo\n", encoding="utf-8")
     failed = run_cli("--mode", "setup", "--project", str(valid))
     assert failed.returncode == 1
@@ -455,16 +423,6 @@ def test_a_project_written_from_the_templates_passes(tmp_path):
     assert report.items == [], report.items
 
 
-def test_legacy_host_line_is_deprecated_not_fail(equity):
-    append(equity, f"{E}/domain-rules.md",
-           "\n### trust-tier-on-values: Every value handed to the app names its trust tier.\n"
-           "- Check: every such value names T1 to T4.\n- Scope: decision-critical\n"
-           "- Source: requester, 2026-10-07\n- Added: 2026-10-07\n- Host: equity_analyst_v2\n")
-    report, _ = diagnose(equity, "run")
-    assert by_check(report)["4a"] == {"DEPRECATED"}
-    assert "FAIL" not in report.levels()
-
-
 def test_prose_headings_outside_the_decisions_section_are_not_decisions(valid):
     edit(valid, RECORD, "## Decisions\n", "## Context\n\n### Note: why this record exists\n\nProse.\n\n## Decisions\n")
     append(valid, RECORD, "\n## Appendix\n\n### Detail: a sub-heading with a colon\n\nMore prose.\n")
@@ -472,8 +430,8 @@ def test_prose_headings_outside_the_decisions_section_are_not_decisions(valid):
     assert report.items == []
 
 
-def test_equity_records_still_pass_check_6(equity):
-    report, _ = diagnose(equity, "run")
+def test_equity_records_still_pass_check_6(adopted):
+    report, _ = diagnose(adopted, "run")
     assert "6" not in by_check(report)
 
 

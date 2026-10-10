@@ -1,6 +1,6 @@
 # research-agent.toml: this repository's research-agent config (contract: the plugin's CONTRACT.md).
 # Keep only the tables that apply; delete the rest. Unknown keys fail the doctor.
-requires = ">=0.6.0, <0.7.0"           # plugin versions this repository works with
+requires = ">=0.7.0, <0.8.0"           # plugin versions this repository works with
 
 [project]                               # present when research runs in this repository
 root = "docs/research"

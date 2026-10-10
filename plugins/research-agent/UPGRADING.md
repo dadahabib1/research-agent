@@ -2,6 +2,46 @@
 
 What changes for a project between plugin versions, and what to do about it. `CONTRACT.md` lists the current contract; `CHANGELOG.md` lists every change by release.
 
+## 0.6.x to 0.7.0
+
+A minor release that changes the contract. Every host edits its `requires` line; a research project also changes how it reads its queue, and a consumer copies the kit again.
+
+### Every host
+
+1. **Pin the release.** Where a project pins the marketplace source, change `"ref"` to `"v0.7.0"` (and `PLUGIN_REF` in a cloud environment's setup script).
+2. **Widen `requires`.** In `research-agent.toml`, replace
+
+   ```toml
+   requires = ">=0.6.0, <0.7.0"
+   ```
+
+   with
+
+   ```toml
+   requires = ">=0.7.0, <0.8.0"
+   ```
+
+   in the same pull request as the pin. Until then the doctor's check 1 FAILs (`installed research-agent 0.7.0 is outside requires = ">=0.6.0, <0.7.0"`), so every `/run-next-task` stops at step 0, and a consumer's kit stamps fail check 8. `/new-research-project` in adopt mode makes this edit after you confirm.
+
+### A research project
+
+3. **The config and rule IDs are required.** The 0.6.x fallback to the `CLAUDE.md` "Research" section is gone: without `research-agent.toml` the doctor FAILs check 1. A domain rule written as a bullet without an ID FAILs check 4b. A project whose 0.6.x doctor showed no DEPRECATED item has nothing to do; otherwise finish steps 2 and 3 of "0.5.x to 0.6.0" below, still on 0.6.2, before you pin 0.7.0.
+4. **The queue.** Runs no longer edit it.
+   - Whoever adds a task writes `todo`. The decision session sets the task's row to `accepted`, `rejected` or `deferred` in its pull request (`references/review.md`, "Decision session"). If you keep your own pull request template, add the line `- Queue rows set: <task: accepted | rejected | deferred>` to its decision-session section.
+   - The queue no longer shows `in review` or `waiting on requester`: a task's row stays `todo` until its decision session. Read a run's state from its pull request's hand-back (`gh pr list --head research/<topic>`), or every task's at once with `uv run --script <plugin root>/tools/next_task.py --list`. An agent or script that polls the queue for `in review` must read the pull request instead.
+   - A merged run's row stays `todo` until the decision session; the selector reads the run as done and skips it. To re-run a merged task, run `/run-next-task <topic>`.
+   - Rows that 0.6.x runs set to `in review` stay as they are until their decision session. A row a 0.6.x run set to `waiting on requester` because it stopped: set it to `todo` when you want it resumed, as before; the next session resumes it, since its pull request's hand-back says `stopped:`. That needs `gh`: without it the selector reads the hand-back from the branch's log, which a 0.6.x log lacks, so the run reads as running and must be named (`/run-next-task <topic>`). A run that asked questions (`waiting on requester` in its hand-back) resumes only when named: `/run-next-task <topic>`.
+   - To abandon a run, close its pull request: the next session starts the task afresh. To keep a task from running, set its row to `deferred`.
+5. **Push access from step 1.** A run claims its task by pushing a branch `research/<topic>` with an empty commit whose subject starts `research-agent claim:`. Unattended runtimes need push access from the start, not only at hand-over. Such a branch with no pull request is a run in progress, or one whose session died; `/run-next-task <topic>` takes over the second kind.
+6. **Template overrides.** A project's own `<root>/templates/log.md` gains a last section, `## Hand-back`, and its Config line drops the legacy option.
+7. **Model identifiers (optional).** Where your instructions forbid model identifiers in the repository, runs now write `by reference` in headers and name the model in the session's closing message. Nothing to configure.
+
+### A consumer
+
+8. **Copy the kit again.** Run `/new-research-project` in consumer mode, or copy `kit/research_drift.py` and `kit/INTEGRATION.md` over the host's `.research-agent/` copies. The doctor reports the old copies' stamps outside the new `requires` until then.
+9. **New report, `PARTIAL`.** `PARTIAL <old>: "<item>" superseded by <new>` means an accepted decision not yet in your lock supersedes part of a pinned one. Update the specs, tickets and tests that rely on that part and pin the new decision, in one pull request; keep the old row. The report stops once the new decision is pinned.
+10. **The research repository needs a config.** The drift tool exits 2 when the research repository has no `research-agent.toml` on the ref; it no longer falls back to `docs/research`.
+
 ## 0.6.1 to 0.6.2
 
 A patch: nothing in a project needs editing.

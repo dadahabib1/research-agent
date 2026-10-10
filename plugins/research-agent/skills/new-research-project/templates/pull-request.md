@@ -8,6 +8,7 @@
 
 - Decision record: `<path>`; `decisions/INDEX.md` updated: <yes>
 - Domain rules changed by accepted decisions: <rule IDs, or none>
+- Queue rows set: <task: accepted | rejected | deferred>
 
 ## Hand-back
 
