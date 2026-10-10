@@ -1,4 +1,4 @@
-# research-agent 0.6.0 sha256:91c781f3d7937dcd59bd8c737e93e3bc4609bdc456ed9c1847d633bda53663ec
+# research-agent 0.6.1 sha256:c8ca4817bc28e99851b21d86329d1b7866e62bc0726bb00ccd0bf45b38eecd15
 # /// script
 # requires-python = ">=3.11"
 # dependencies = []
@@ -49,7 +49,8 @@ REPORTS = """reports, and what to do about each:
               Action: read the diff the report names, then consume the item again: update the
               specs and code that rely on it, and the row (new commit, hash and date), in one
               pull request.
-  SUPERSEDED  an accepted decision on REF supersedes a pinned one.
+  SUPERSEDED  an accepted decision on REF supersedes a pinned one (its supersedes list names
+              the pinned decision alone; a quoted part of a decision is not reported here).
               Action: consume the new decision; list every spec, ticket and test that uses the
               old one, and retire the old row, in the same pull request.
   STATUS      a pinned decision is no longer accepted.
@@ -128,8 +129,11 @@ def lock_rows() -> dict[str, list[dict[str, str]]]:
     return tables
 
 
-def mentions(text: str, name: str) -> bool:
-    return re.search(rf"(?<![\w-]){re.escape(name)}(?![\w-])", text) is not None
+def supersedes(text: str, name: str) -> bool:
+    """Whether a supersedes list names the whole decision: an item that is the name alone,
+    bare or quoted. A quoted part of a decision ("<name> rule 2, detection only") is not."""
+    items = re.findall(r'"([^"]*)"|\'([^\']*)\'|([^,\[\]\s"\'][^,\[\]]*)', text)
+    return any("".join(item).strip() == name for item in items)
 
 
 def host_rules(text: str, consumer: str) -> list[str]:
@@ -173,7 +177,7 @@ def check(research: Path, consumer: str | None) -> list[str]:
         if field(block, "status") != "accepted":
             continue
         for old in sorted(locked - {name}):
-            if mentions(field(block, "supersedes"), old):
+            if supersedes(field(block, "supersedes"), old):
                 report.append(f"SUPERSEDED {old}: by {name} ({path})")
         if name not in locked:
             report.append(f"NEW      {name}: accepted on {head} ({path}), not in the lock")
