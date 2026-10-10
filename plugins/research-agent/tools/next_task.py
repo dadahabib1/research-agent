@@ -25,7 +25,9 @@ the task's name, case ignored) takes that row instead, and may also resume a wai
 row or re-run a done one; it never takes a row in review. The claim is an empty commit, pushed
 without force (a replaced abandoned or done branch is pushed with --force-with-lease on the tip
 read), so of two runs that pick one row, one push is rejected and that run takes the next row.
-The selected branch is then checked out. --list prints every row's state and claims nothing.
+The branch is checked out before the claim is pushed, and a local branch with unpushed commits is
+never reset. Pull requests from forks are ignored, and a row whose deliverable stem is empty, shared
+or not a valid branch name is passed over. --list prints every row's state and claims nothing.
 
 Exit codes: 0 a task selected (or --list printed); 1 no row qualifies; 2 the selector could not run.
 """
@@ -40,7 +42,8 @@ import subprocess
 import sys
 import tomllib
 import uuid
-from dataclasses import dataclass, field
+from collections import Counter
+from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 
 CONFIG = "research-agent.toml"
@@ -49,6 +52,7 @@ COLUMNS = ("Task", "Prompt", "Deliverable", "Prerequisites", "Status")
 AUTO = {"free", "abandoned", "stopped"}
 NAMED = AUTO | {"waiting", "running", "done"}
 RESUME = {"stopped", "waiting", "running"}
+LOST_RACE = ("[rejected]", "stale info", "non-fast-forward", "fetch first")  # another run's push won
 
 
 class CannotRun(Exception):
@@ -66,7 +70,7 @@ class Row:
     state: str = ""
     tip: str | None = None          # the branch's last commit, where it exists
     pull_request: str | None = None  # the latest pull request's URL
-    notes: list[str] = field(default_factory=list)
+    invalid: str = ""               # why the topic cannot name a branch, if it cannot
 
     @property
     def branch(self) -> str:
@@ -103,12 +107,14 @@ def gh_works(repo: Path) -> bool:
 
 
 def pull_requests(repo: Path, branch: str) -> list[dict]:
-    """Every pull request from branch, newest first: number, state (OPEN, CLOSED, MERGED), url, body."""
+    """Every pull request from this repository's branch, newest first: number, state (OPEN, CLOSED,
+    MERGED), url, body. A fork's branch of the same name is another run's, or nobody's: ignored."""
     out = run(["gh", "pr", "list", "--head", branch, "--state", "all", "--limit", "50",
-               "--json", "number,state,url,body"], repo)
+               "--json", "number,state,url,body,isCrossRepository"], repo)
     if out.returncode != 0:
         raise CannotRun(f"gh pr list --head {branch} failed: {out.stderr.strip()}")
-    return sorted(json.loads(out.stdout or "[]"), key=lambda pr: pr["number"], reverse=True)
+    prs = [pr for pr in json.loads(out.stdout or "[]") if not pr.get("isCrossRepository")]
+    return sorted(prs, key=lambda pr: pr["number"], reverse=True)
 
 
 # ---------- the queue ----------
@@ -151,6 +157,14 @@ def parse_queue(text: str) -> list[Row]:
                             topic=PurePosixPath(row.get("Deliverable", "")).name.removesuffix(".md")))
     if header is None:
         raise CannotRun(f"the queue has no table with the columns {', '.join(COLUMNS)}")
+    counts = Counter(r.topic for r in rows)
+    for row in rows:
+        if not row.topic:
+            row.invalid = "no deliverable file name"
+        elif counts[row.topic] > 1:
+            row.invalid = f"{counts[row.topic]} rows share the deliverable stem {row.topic}"
+        elif run(["git", "check-ref-format", f"refs/heads/research/{row.topic}"], Path.cwd()).returncode != 0:
+            row.invalid = f"research/{row.topic} is not a valid branch name"
     return rows
 
 
@@ -237,21 +251,39 @@ def claim(repo: Repo, row: Row) -> str | None:
         if resume:
             git(repo.path, "checkout", "-q", row.branch)
         else:
+            keep_unpushed(repo, row)
             git(repo.path, "checkout", "-q", "-B", row.branch, repo.default)
         return git(repo.path, "rev-parse", "--short", "HEAD")
+    keep_unpushed(repo, row)
     base = row.tip if resume else git(repo.path, "rev-parse", repo.default)
     tree = git(repo.path, "rev-parse", f"{base}^{{tree}}")
     message = f"{CLAIM} {row.branch} {uuid.uuid4().hex[:12]}"
     commit = git(repo.path, "commit-tree", tree, "-p", base, "-m", message)
+    previous = git(repo.path, "symbolic-ref", "-q", "--short", "HEAD", check=False) or git(repo.path, "rev-parse", "HEAD")
+    git(repo.path, "checkout", "-q", "-B", row.branch, commit)  # a failure here leaves nothing on the remote
     push = ["git", "push", "-q"]
     if row.tip and not resume:  # an abandoned or done branch: replace it only if nobody moved it
         push.append(f"--force-with-lease=refs/heads/{row.branch}:{row.tip}")
-    if run([*push, "origin", f"{commit}:refs/heads/{row.branch}"], repo.path).returncode != 0:
-        return None
-    git(repo.path, "fetch", "-q", "origin", f"+refs/heads/{row.branch}:refs/remotes/origin/{row.branch}")
-    git(repo.path, "checkout", "-q", "-B", row.branch, commit)
-    git(repo.path, "branch", "-q", f"--set-upstream-to=origin/{row.branch}")
+    out = run([*push, "origin", f"{commit}:refs/heads/{row.branch}"], repo.path)
+    if out.returncode != 0:
+        git(repo.path, "checkout", "-q", previous)
+        git(repo.path, "branch", "-q", "-D", row.branch)
+        if any(mark in out.stderr for mark in LOST_RACE):
+            return None
+        raise CannotRun(f"git push of the claim on {row.branch} failed: {out.stderr.strip()}")
+    git(repo.path, "config", f"branch.{row.branch}.remote", "origin")
+    git(repo.path, "config", f"branch.{row.branch}.merge", f"refs/heads/{row.branch}")
     return commit[:7]
+
+
+def keep_unpushed(repo: Repo, row: Row) -> None:
+    """Refuse to reset a local branch that holds commits the remote does not have."""
+    if not git(repo.path, "rev-parse", "--verify", "-q", f"refs/heads/{row.branch}", check=False):
+        return
+    ahead = git(repo.path, "rev-list", row.branch, "--not", repo.default, "--remotes=origin").split()
+    if ahead:
+        raise CannotRun(f"the local branch {row.branch} has {len(ahead)} commit(s) the remote does not have "
+                        f"({', '.join(c[:7] for c in ahead[:3])}); push or remove them, then run again")
 
 
 # ---------- selection ----------
@@ -260,6 +292,8 @@ def eligible(row: Row, rows: list[Row], named: bool) -> str | None:
     """Why row cannot be taken, or None when it can."""
     if row.status != "todo":
         return f"status {row.status}, not todo"
+    if row.invalid:
+        return row.invalid
     statuses = {r.task.lower(): r.status for r in rows}
     waiting = [p for p in row.prerequisites if statuses.get(p) != "accepted"]
     if waiting:
@@ -281,7 +315,7 @@ def select(repo: Repo, rows: list[Row], topic: str | None) -> tuple[Row | None, 
     else:
         candidates = rows
     for row in candidates:
-        if row.status == "todo":
+        if row.status == "todo" and not row.invalid:
             assess(repo, row)
         why = eligible(row, rows, named=bool(topic))
         if why:
@@ -308,10 +342,16 @@ def main(argv: list[str] | None = None) -> int:
         if args.list:
             print(f"mode: {mode}")
             for row in rows:
-                assess(repo, row)
+                if row.invalid:
+                    row.state = "invalid"
+                else:
+                    assess(repo, row)
                 where = row.pull_request or (row.branch if row.tip else "-")
                 print(f"{row.status:<21} {row.state:<10} {row.topic}  {where}")
             return 0
+        current = git(repo.path, "symbolic-ref", "-q", "--short", "HEAD", check=False)
+        if current.startswith("research/"):
+            raise CannotRun(f"on {current}: start from the default branch")
         row, commit, reasons = select(repo, rows, args.topic)
     except CannotRun as exc:
         print(f"selector could not run: {exc}")

@@ -1,7 +1,8 @@
 """The selector (tools/next_task.py): parallel runs take different tasks, the claim is atomic, and
 each branch and pull request state is read as CONTRACT.md "The queue" says. Git runs for real
-against a local bare remote; gh is replaced by a fake pull request list."""
+against a local bare remote; gh is replaced by a fake that answers `gh pr list` from a table."""
 
+import json
 import subprocess
 from pathlib import Path
 
@@ -182,17 +183,27 @@ def body(status: str) -> str:
 
 @pytest.fixture
 def prs(monkeypatch):
-    """Turn on the pull request mode with a fake gh: {branch: [pull requests]}."""
+    """Turn on the pull request mode with a fake gh that answers `gh pr list --head <branch> --json
+    <fields>` from {branch: [pull requests]}, in the order gh gives (not sorted)."""
     table: dict[str, list[dict]] = {}
+    real_run = nt.run
+
+    def fake_run(cmd, cwd):
+        if cmd[0] != "gh":
+            return real_run(cmd, cwd)
+        assert cmd[:3] == ["gh", "pr", "list"], cmd
+        fields = cmd[cmd.index("--json") + 1].split(",")
+        listed = [{f: item[f] for f in fields} for item in table.get(cmd[cmd.index("--head") + 1], [])]
+        return subprocess.CompletedProcess(cmd, 0, json.dumps(listed), "")
+
     monkeypatch.setattr(nt, "gh_works", lambda path: True)
-    monkeypatch.setattr(nt, "pull_requests", lambda path, branch: sorted(
-        table.get(branch, []), key=lambda pr: pr["number"], reverse=True))
+    monkeypatch.setattr(nt, "run", fake_run)
     return table
 
 
-def pr(number: int, state: str, status: str | None = None) -> dict:
+def pr(number: int, state: str, status: str | None = None, fork: bool = False) -> dict:
     return {"number": number, "state": state, "url": f"https://example.invalid/pull/{number}",
-            "body": body(status) if status else "no hand-back"}
+            "body": body(status) if status else "no hand-back", "isCrossRepository": fork}
 
 
 def test_open_pull_requests(origin, prs, capsys):
@@ -326,3 +337,87 @@ def test_cannot_run_without_a_project(tmp_path, capsys):
     write(repo, {"research-agent.toml": 'requires = ">=0.7.0"\n[consumes]\nresearch = "o/r"\n'})
     code, out = select(repo, capsys=capsys)
     assert code == 2 and "no [project] root" in out
+
+
+# ---------- review round 1 (H1, M1, M2, L1, L2) ----------
+
+def test_fork_pull_requests_are_ignored(origin, prs, capsys):
+    """H1: a fork's closed pull request from a branch of the same name, newer than the run's open
+    one, must not make the task look abandoned (which would replace the run's branch)."""
+    a = clone(origin, "a")
+    select(a, capsys=capsys)
+    hand_back(a, "topic-a", "in review")
+    run_tip = g(a, "rev-parse", "HEAD")
+    prs["research/topic-a"] = [pr(1, "OPEN", "in review"), pr(2, "CLOSED", "in review", fork=True),
+                               pr(3, "OPEN", "stopped: x", fork=True)]
+    code, out = select(clone(origin, "b"), capsys=capsys)
+    assert selected(out) == "selected: new topic-b", out
+    assert "passed over: topic-a: in review (https://example.invalid/pull/1)" in out
+    assert g(a, "ls-remote", "origin", "refs/heads/research/topic-a").split()[0] == run_tip
+
+
+def test_a_push_failure_other_than_a_lost_race_exits_2(origin, capsys):
+    """M1: no push rights, a bad URL or a protection rule is an error, not 'claimed by another run'."""
+    a = clone(origin, "a")
+    g(a, "remote", "set-url", "--push", "origin", str(origin.parent / "missing.git"))
+    code, out = select(a, capsys=capsys)
+    assert code == 2, out
+    assert "git push of the claim on research/topic-a failed" in out
+    assert "claimed by another run" not in out
+    assert g(a, "branch", "--show-current") == "main"
+    assert not g(a, "branch", "--list", "research/topic-a")
+
+
+def test_a_blocked_checkout_leaves_no_claim(origin, capsys):
+    """M2: when the claim cannot be checked out, nothing is pushed, and a stopped run stays stopped."""
+    a = clone(origin, "a")
+    select(a, capsys=capsys)
+    hand_back(a, "topic-a", "stopped: budget")
+    b = clone(origin, "b")
+    write(b, {"research/topic-a.md": "an untracked file in the way\n"})
+    code, out = select(b, capsys=capsys)
+    assert code == 2, out
+    assert g(b, "log", "-1", "--format=%s", "origin/research/topic-a") == "run topic-a"
+    g(b, "ls-remote", "--exit-code", "origin", "refs/heads/research/topic-a")
+    assert g(origin, "log", "-1", "--format=%s", "research/topic-a") == "run topic-a"
+    code, out = select(b, "--list", capsys=capsys)
+    assert any(l.split()[:2] == ["todo", "stopped"] and "topic-a" in l for l in out.splitlines()), out
+
+
+def test_invalid_and_duplicate_topics_are_passed_over(tmp_path, capsys):
+    """L1: an empty, shared or unusable deliverable stem never reaches a git ref."""
+    bare = tmp_path / "origin.git"
+    subprocess.run(["git", "init", "-q", "--bare", "-b", "main", str(bare)], check=True)
+    seed = tmp_path / "seed"
+    subprocess.run(["git", "init", "-q", "-b", "main", str(seed)], check=True)
+    queue = ("| Task | Prompt | Deliverable | Prerequisites | Status |\n|---|---|---|---|---|\n"
+             "| Empty | p.md |  | none | todo |\n| Colon | p.md | x:main.md | none | todo |\n"
+             "| Space | p.md | bad name.md | none | todo |\n| Twin 1 | p.md | twin.md | none | todo |\n"
+             "| Twin 2 | p.md | out/twin.md | none | todo |\n| Good | p.md | good.md | none | todo |\n")
+    write(seed, {"research-agent.toml": CONFIG, "research/research-queue.md": queue})
+    g(seed, "add", "-A")
+    g(seed, "commit", "-q", "-m", "seed")
+    g(seed, "remote", "add", "origin", str(bare))
+    g(seed, "push", "-q", "origin", "main")
+    code, out = select(clone(bare, "a"), capsys=capsys)
+    assert selected(out) == "selected: new good", out
+    assert "passed over: : no deliverable file name" in out
+    assert "passed over: x:main: research/x:main is not a valid branch name" in out
+    assert "passed over: bad name: research/bad name is not a valid branch name" in out
+    assert out.count("2 rows share the deliverable stem twin") == 2
+    assert g(bare, "for-each-ref", "--format=%(refname)") == "refs/heads/main\nrefs/heads/research/good"
+
+
+def test_unpushed_local_commits_are_never_reset(origin, capsys):
+    """L2: a local research/<topic> with commits the remote lacks is not reset by the claim."""
+    a = clone(origin, "a")
+    g(a, "checkout", "-q", "-b", "research/topic-a")
+    write(a, {"research/topic-a.md": "local work\n"})
+    g(a, "add", "-A")
+    g(a, "commit", "-q", "-m", "unpushed work")
+    work = g(a, "rev-parse", "HEAD")
+    g(a, "checkout", "-q", "main")
+    code, out = select(a, capsys=capsys)
+    assert code == 2 and "has 1 commit(s) the remote does not have" in out, out
+    assert g(a, "rev-parse", "research/topic-a") == work
+    assert not g(origin, "branch", "--list", "research/topic-a")
