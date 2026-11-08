@@ -4,6 +4,26 @@ Every change to the plugin, by release. A pull request adds a line under `## Unr
 
 ## Unreleased
 
+## 0.8.0 (2026-11-08)
+
+A run stops when its raw fetcher is down, the researcher no longer counts on Firecrawl tools that no server provides, and the fetch-raw server starts about twice as fast. A contract change: every host edits its `requires` line (`UPGRADING.md`).
+
+- Added: the fetcher check (#62). `/run-next-task` calls `fetch_raw` once on the plugin's repository page at step 0, after the doctor, and again before each batch of researcher calls. If the tool is absent, the call fails, or the status is not OK, the run delegates nothing and fetches nothing with WebFetch: at step 0 it ends before selection with `Status: stopped: fetch_raw unavailable` and the error text; later it stops early on its branch. On 2026-11-08 a run whose server had failed to connect delegated three researchers onto WebFetch summaries (378,614 tokens, notes rejected); the requester's rule is "such an error should stop the process immediately and not waste my tokens".
+- Added: the researcher's first step (#62). With no `fetch_raw` among its tools, or after a failed `fetch_raw` call, it returns at once with `fetch_raw unavailable` under Gaps and does not go on with WebFetch.
+- Changed: `summary-fetched` now covers only a value from a page `fetch_raw` could not open while it worked (protocol core rules, `standards.md`, `searching.md`, the researcher), never a run without `fetch_raw` (#62).
+- Changed: the researcher's text says that Firecrawl reaches it only inside `fetch_raw` (`FIRECRAWL_API_KEY`, raw bytes through the plugin's converter), that the two `mcp__firecrawl__` names exist only on a host that configures a `firecrawl` MCP server, and that they are never a fallback for `fetch_raw` (#63). The README's Firecrawl section says the same.
+- Fixed: the fetch-raw server's start (#61). Each start recompiled about 1,490 library files, because uv installs without bytecode and the server turned bytecode writing off before any import; it now lets the libraries cache their bytecode in uv's environment, while its own modules still write none into the plugin folder. The fetcher (converter, network and PDF code) is imported on the first tool call instead of at start. Measured on one Windows machine on 2026-11-08: imports at start 7.6 to 8.9 s before, 3.6 to 5.1 s after; `uv run` to the `initialize` reply 10.6 to 40.8 s before (median 12.6 s, six starts) and 5.0 to 10.4 s after (median 6.1 s, five starts), interleaved on the same busy machine. The first start after an install compiles and writes the bytecode once (12.5 s measured). The tool's schema and replies are unchanged.
+- Added: `MCP_TIMEOUT` (#61). `/new-research-project` writes `"MCP_TIMEOUT": "120000"` into the project's `.claude/settings.json` `env` block when absent (new and adopt modes), and the doctor's check 13 WARNs when it is set neither there nor in the environment.
+- Deprecated: the `firecrawl` MCP server hook and its two tool names in the researcher's tool list, removed in 0.9.0 (#63). The doctor's check 14 reports a `firecrawl` server in the project's `.mcp.json` as DEPRECATED.
+- Kit: `INTEGRATION.md` names contract 0.8 and `v0.8.x`; both files are restamped 0.8.0, so consumers copy the kit again.
+
+### Contract
+
+- Added: the fetcher check and its stop, `Status: stopped: fetch_raw unavailable` (at step 0 before selection with no claim, later by the early stop); the researcher's `fetch_raw unavailable` return; the doctor's checks 13 (WARN, `MCP_TIMEOUT`) and 14 (DEPRECATED, a `firecrawl` server).
+- Changed: `summary-fetched` marks a value from a page `fetch_raw` could not open while it worked, never a run without `fetch_raw`.
+- Deprecated in 0.8.0, removed in 0.9.0: the `firecrawl` server name and its two tool names in the researcher's tool list.
+- Unchanged: the `fetch_raw` tool, its arguments, header fields, statuses and environment variables; skill and agent names; the hand-back's labels; the queue, the selector, the lock and the kit's paths and command lines.
+
 ## 0.7.0 (2026-10-10)
 
 Parallel runs, the model named by reference, and the removals 0.6.0 announced. A contract change: every host edits its `requires` line (`UPGRADING.md`). Design: `docs/design/0.7.0.md`.

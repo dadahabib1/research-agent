@@ -27,14 +27,14 @@ Pin a release tag; `/new-research-project` writes this for you.
 ```json
 {
   "extraKnownMarketplaces": {
-    "personal-agents": { "source": { "source": "github", "repo": "dadahabib1/research-agent", "ref": "v0.7.0" } }
+    "personal-agents": { "source": { "source": "github", "repo": "dadahabib1/research-agent", "ref": "v0.8.0" } }
   },
   "enabledPlugins": { "research-agent@personal-agents": true }
 }
 ```
 
   Claude Code installs it once the folder is trusted.
-- **Manually:** run `/plugin marketplace add dadahabib1/research-agent@v0.7.0`, then `/plugin install research-agent@personal-agents`.
+- **Manually:** run `/plugin marketplace add dadahabib1/research-agent@v0.8.0`, then `/plugin install research-agent@personal-agents`.
 - **Adopting from another agent:** give the agent `plugins/research-agent/kit/INTEGRATION.md`; it says how to set up, add a task, run it, read the hand-back and keep pins current.
 - **For claude.ai chat and Cowork:** zip `plugins/research-agent/skills/research-protocol/` and upload it as a skill.
 
@@ -58,7 +58,7 @@ What it returns: a header (status OK, BLOCKED or ERROR with the HTTP code; final
 
 ### Requirements
 
-- [uv](https://docs.astral.sh/uv/) on the PATH. The server runs with `uv run --script`; its dependencies are pinned in `servers/fetch_raw/server.py` and locked in `server.py.lock`, and uv keeps them in its own cache, not in the plugin folder. The first start downloads about 45 packages; later starts take a second or two.
+- [uv](https://docs.astral.sh/uv/) on the PATH. The server runs with `uv run --script`; its dependencies are pinned in `servers/fetch_raw/server.py` and locked in `server.py.lock`, and uv keeps them in its own cache, not in the plugin folder. The first start downloads about 45 packages and compiles them, which uv's environment then keeps (never the plugin folder); later starts took 5 to 10 s, median 6 s, on a busy Windows machine (2026-11-08; 0.7.0's took 7 to 40 s). Claude Code waits 30 s for an MCP server unless `MCP_TIMEOUT` is set, so setup writes `"MCP_TIMEOUT": "120000"` into the project's `.claude/settings.json` `env` block, and the doctor warns when it is missing (check 13). A run whose `fetch_raw` is not connected stops before it starts a researcher.
 - Outbound HTTPS to the sites a run reads.
 
 ### Environment variables
@@ -82,7 +82,7 @@ uv is pre-installed in cloud sessions. Three settings in the cloud environment:
 3. **Setup script:** repository settings do not install plugins in cloud sessions, so the setup script installs the pinned release and caches the server's dependencies. Its first line names the tag; changing that line changes the script, which rebuilds the cached environment.
 
 ```bash
-PLUGIN_REF=v0.7.0
+PLUGIN_REF=v0.8.0
 claude plugin marketplace add "dadahabib1/research-agent@${PLUGIN_REF}" && claude plugin install research-agent@personal-agents || true
 mkdir -p /tmp/fetch-raw && cd /tmp/fetch-raw \
   && curl -fsSL -O "https://raw.githubusercontent.com/dadahabib1/research-agent/${PLUGIN_REF}/plugins/research-agent/servers/fetch_raw/server.py" \
@@ -90,9 +90,11 @@ mkdir -p /tmp/fetch-raw && cd /tmp/fetch-raw \
   && uv sync --script server.py --locked || true
 ```
 
-### Optional: a Firecrawl MCP server
+### Firecrawl: inside `fetch_raw` only
 
-A project may also configure Firecrawl's own MCP server in its `.mcp.json` under the name `firecrawl`; the researcher's tool list already names `mcp__firecrawl__firecrawl_search` and `mcp__firecrawl__firecrawl_scrape`. Use its search as a second discovery route. Its scrape returns Firecrawl's markdown, which merges superscripts into numbers (`0.00056^5` becomes `0.000565`), so values read from it are summary-fetched; read decision-critical values with `fetch_raw`.
+The plugin reaches Firecrawl through `fetch_raw` alone: with `FIRECRAWL_API_KEY` set, its default route retries a blocked page through Firecrawl's API and converts the raw bytes itself. When `fetch_raw` is down there is no Firecrawl either, and the run stops.
+
+Deprecated in 0.8.0, removed in 0.9.0: a Firecrawl MCP server a project configures in its `.mcp.json` under the name `firecrawl`, whose `mcp__firecrawl__firecrawl_search` and `mcp__firecrawl__firecrawl_scrape` the researcher's tool list still names. On a host without that server the names are absent. Its scrape returns Firecrawl's markdown, which merges superscripts into numbers (`0.00056^5` becomes `0.000565`). A project that needs another fetch server uses its own `.claude/agents/researcher.md` (`CONTRACT.md`, "Skills and agents").
 
 ### Tests
 

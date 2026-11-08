@@ -81,7 +81,7 @@ Each rule's incident and check are in `references/takeaways.md`.
 - **Reproduce before you rely.** A claim nobody re-computed is a lead, not a fact.
 - **Numbers come from sources or executed code.** Mark hand-computed values until a script reproduces them.
 - **Every input carries a knowledge timestamp.** Nothing observable only after the as-of date enters the analysis.
-- **Primary sources first.** Label secondary, snippet-only and summary-fetched sources; mark memory as [UNVERIFIED].
+- **Primary sources first.** Label secondary and snippet-only sources; mark memory as [UNVERIFIED]. Summary-fetched labels a value from a page `fetch_raw` could not open while it worked; it is never a fallback for a missing or failing `fetch_raw`, which stops the run (`/run-next-task`, step 0).
 - **Match the evidence to the claim type.** Literature is graded; a measurement names its sample and script; a documentary fact names its version or date.
 - **Show conflicts between sources side by side,** graded.
 - **Test every rule at its boundaries and with known answers** before trusting it.
