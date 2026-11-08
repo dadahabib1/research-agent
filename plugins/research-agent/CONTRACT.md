@@ -15,7 +15,7 @@ What a host that adopts this plugin may depend on: names, paths, formats and beh
 At the repository root. It holds only what differs between hosts; everything else is fixed below. Unknown keys are an error.
 
 ```toml
-requires = ">=0.7.0, <0.8.0"           # required
+requires = ">=0.8.0, <0.9.0"           # required
 
 [project]                               # present when research runs in this repository
 root = "docs/research"                  # required
@@ -168,7 +168,7 @@ Proposed decisions are proposals; only the decider decides, in a decision sessio
 
 ## The doctor
 
-`uv run --script ${CLAUDE_PLUGIN_ROOT}/tools/doctor.py --mode run|setup [--project PATH]` compares the config with the files on disk. `/new-research-project` runs it last with `--mode setup`; `/run-next-task` runs it at step 0 with `--mode run`. Each item prints on its own line as `FAIL`, `WARN` or `DEPRECATED` with its check number; the output names environment variables, never their values. Exit codes: 0 no FAIL; 1 at least one FAIL (the run or setup stops); 2 the doctor could not run. `--help` lists the checks. The identity check FAILs with `--mode run` and WARNs with `--mode setup` when `[project.fetch_identity]` and `FETCH_RAW_IDENTITY_HOSTS` differ or a named variable is unset; when the environment map is set but the config declares none, it WARNs in both modes.
+`uv run --script ${CLAUDE_PLUGIN_ROOT}/tools/doctor.py --mode run|setup [--project PATH]` compares the config with the files on disk. `/new-research-project` runs it last with `--mode setup`; `/run-next-task` runs it at step 0 with `--mode run`. Each item prints on its own line as `FAIL`, `WARN` or `DEPRECATED` with its check number; the output names environment variables, never their values. Exit codes: 0 no FAIL; 1 at least one FAIL (the run or setup stops); 2 the doctor could not run. `--help` lists the checks. The identity check FAILs with `--mode run` and WARNs with `--mode setup` when `[project.fetch_identity]` and `FETCH_RAW_IDENTITY_HOSTS` differ or a named variable is unset; when the environment map is set but the config declares none, it WARNs in both modes. In a repository with `[project]`, check 13 WARNs when `MCP_TIMEOUT` is set neither in the `env` block of `.claude/settings.json` nor in the environment, and check 14 reports a `firecrawl` server in `.mcp.json` as DEPRECATED.
 
 ## The consumer kit
 
@@ -205,7 +205,7 @@ A Research commit of `pending <PR URL>` marks a row that waits for a research me
 ## Skills and agents
 
 - Skills: `research-protocol`, `research-writing`, `run-next-task` (`/run-next-task`, or `/run-next-task <topic>` for a named task), `new-research-project` (`/new-research-project`, modes new, adopt and consumer).
-- Agents, invoked by their plugin-scoped names as `subagent_type`: `research-agent:researcher` (web search and fetch only; launched without the user, project and local `CLAUDE.md` files, so project facts reach it only through the delegation prompt), `research-agent:reviewer` (reads and runs scripts; no web). A project that configures a raw-page fetcher as an MCP server named `firecrawl` makes its search and scrape tools available to the researcher; no other project tool reaches it. A project that needs a different fetch server may place its own `.claude/agents/researcher.md` with `name: researcher`, the same frontmatter and body, and a `tools:` line that names its server's search and scrape tools and nothing else; `/run-next-task` then calls it by the bare name `researcher` in place of the plugin's.
+- Agents, invoked by their plugin-scoped names as `subagent_type`: `research-agent:researcher` (web search and fetch only; launched without the user, project and local `CLAUDE.md` files, so project facts reach it only through the delegation prompt), `research-agent:reviewer` (reads and runs scripts; no web). A project that configures a raw-page fetcher as an MCP server named `firecrawl` makes its search and scrape tools available to the researcher; no other project tool reaches it. **Deprecated in 0.8.0; removed in 0.9.0:** the `firecrawl` server name and its two tool names in the researcher's tool list. No host is known to configure that server, and the plugin's Firecrawl fallback is inside `fetch_raw` (`FIRECRAWL_API_KEY`); the doctor reports a `firecrawl` server in the project's `.mcp.json` as DEPRECATED (check 14). A project that needs a different fetch server may place its own `.claude/agents/researcher.md` with `name: researcher`, the same frontmatter and body, and a `tools:` line that names its server's search and scrape tools and nothing else; `/run-next-task` then calls it by the bare name `researcher` in place of the plugin's.
 
 ## Raw fetch tool
 
@@ -215,7 +215,8 @@ A Research commit of `pending <PR URL>` marks a row that waits for a research me
 - Environment variables, read from the environment Claude Code starts the server with:
   - `FETCH_RAW_IDENTITY_HOSTS` (optional): comma-separated `host-suffix=ENVVAR` pairs, such as `example.gov=EXAMPLE_IDENTITY`. A request to a matching host sends the named variable's value as its User-Agent; no other host receives it, and a matching host is never routed through Firecrawl. A missing variable gives `ERROR`. The server reads the map only from the environment; a project declares the same map in `[project.fetch_identity]`, and the doctor compares the two.
   - `FIRECRAWL_API_KEY` (optional): enables the Firecrawl fallback and `route: firecrawl`.
-- Labels: `raw-fetched` (a value read from `fetch_raw`), next to `snippet` and `summary-fetched`.
+- Labels: `raw-fetched` (a value read from `fetch_raw`), next to `snippet` and `summary-fetched`. `summary-fetched` marks a value from a page `fetch_raw` could not open while it worked, never a run without `fetch_raw`.
+- **A run stops without it.** `/run-next-task` calls `fetch_raw` once on the plugin's repository page (`https://github.com/dadahabib1/research-agent`, `max_chars` 200) at step 0, after the doctor, and again before each batch of researcher calls. If the tool is absent, the call fails, or the status is not `OK`, the run starts no researcher and does not fetch with WebFetch: at step 0 it ends before selection, with no claim, and hands back `Status: stopped: fetch_raw unavailable` with the error text; later it stops early on its branch with the same status, and the next session resumes it. The researcher returns at once, with `fetch_raw unavailable` under Gaps, when `fetch_raw` is not among its tools or a call to it fails.
 
 ## Headings and paths cited by name
 

@@ -14,15 +14,44 @@
 # ]
 # ///
 """MCP stdio server: one read-only tool, fetch_raw. Launched by the plugin's .mcp.json with
-`uv run --script`; dependencies are pinned above and locked in server.py.lock."""
+`uv run --script`; dependencies are pinned above and locked in server.py.lock.
+
+Start time (issue #61): Claude Code gives a server 30 s to connect unless MCP_TIMEOUT is set, and this
+one took 14 to 36 s on a busy machine. Two things keep the handshake short. The libraries' bytecode is
+cached in uv's environment, outside the plugin folder, so a start no longer recompiles them; this
+package's own modules still write no bytecode, so nothing lands in the plugin folder. And the fetcher
+(converter, network and PDF code) is imported on the first tool call, not at start."""
 
 from __future__ import annotations
 
 import os
 import sys
+from importlib.machinery import PathFinder, SourceFileLoader
 from typing import Literal
 
-sys.dont_write_bytecode = True  # write nothing into the plugin folder
+
+class _NoBytecodeLoader(SourceFileLoader):
+    """Loads a module from source without writing its bytecode."""
+
+    def set_data(self, path, data, *, _mode=0o666):  # the loader writes bytecode only through this
+        pass
+
+
+class _PluginModules:
+    """Finds the fetchraw package as usual and loads it with _NoBytecodeLoader: nothing is written
+    into the plugin folder, while the libraries cache their bytecode in uv's environment."""
+
+    @staticmethod
+    def find_spec(name, path=None, target=None):
+        if name != "fetchraw" and not name.startswith("fetchraw."):
+            return None
+        spec = PathFinder.find_spec(name, path, target)
+        if spec is not None and type(spec.loader) is SourceFileLoader:
+            spec.loader = _NoBytecodeLoader(spec.loader.name, spec.loader.path)
+        return spec
+
+
+sys.meta_path.insert(0, _PluginModules)
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import anyio  # noqa: E402
@@ -30,7 +59,6 @@ from mcp.server.mcpserver import MCPServer  # noqa: E402
 from mcp.types import ToolAnnotations  # noqa: E402
 
 from fetchraw import __version__  # noqa: E402
-from fetchraw.tool import fetch_page  # noqa: E402
 
 DESCRIPTION = """Fetch one URL and return its text without summarising: the page itself, not a model's paraphrase.
 
@@ -59,7 +87,15 @@ server = MCPServer(name="fetch-raw", version=__version__)
 )
 async def fetch_raw(url: str, offset: int = 0, max_chars: int = 40000,
                     route: Literal["auto", "direct", "firecrawl"] = "auto") -> str:
-    return await anyio.to_thread.run_sync(fetch_page, url, offset, max_chars, route, os.environ)
+    return await anyio.to_thread.run_sync(fetch, url, offset, max_chars, route)
+
+
+def fetch(url: str, offset: int, max_chars: int, route: str) -> str:
+    """The tool's work, in a worker thread. The first call imports the fetcher; Python's import lock
+    makes concurrent first calls wait for that one import."""
+    from fetchraw.tool import fetch_page
+
+    return fetch_page(url, offset, max_chars, route, os.environ)
 
 
 if __name__ == "__main__":

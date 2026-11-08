@@ -2,6 +2,18 @@
 
 What changes for a project between plugin versions, and what to do about it. `CONTRACT.md` lists the current contract; `CHANGELOG.md` lists every change by release.
 
+## 0.7.x to 0.8.0
+
+A minor release that changes the contract: a run now stops when `fetch_raw` is unavailable, and the researcher's `firecrawl` tool names are deprecated. Every host edits its `requires` line; nothing else in a project's files has to change.
+
+1. **Pin the release.** Where a project pins the marketplace source, change `"ref"` to `"v0.8.0"` (and `PLUGIN_REF` in a cloud environment's setup script).
+2. **Widen `requires`.** In `research-agent.toml`, replace `">=0.7.0, <0.8.0"` with `">=0.8.0, <0.9.0"`. Until then `/run-next-task` stops at step 0 with check 1's range FAIL.
+3. **Consumers copy the kit again.** Both kit files carry the 0.8.0 stamp; a 0.7.0 stamp is outside the new range (check 8). `/new-research-project` in adopt mode copies them.
+4. **Optional: `MCP_TIMEOUT`.** Add `"MCP_TIMEOUT": "120000"` to the `env` block of the project's `.claude/settings.json` (`/new-research-project` in adopt mode offers it), so the fetch-raw server has time to start. The doctor WARNs while it is set neither there nor in the environment (check 13). A machine whose user settings already set it (`~/.claude/settings.json`, as on the maintainer's machine since 2026-11-08) passes without the project entry, because those settings reach the doctor's environment.
+5. **Firecrawl MCP server (deprecated).** If the project's `.mcp.json` configures a server named `firecrawl` (check 14 reports it as DEPRECATED), plan to drop it before 0.9.0: `fetch_raw` with `FIRECRAWL_API_KEY` already retries blocked pages through Firecrawl's API. A project that needs another fetch server places its own `.claude/agents/researcher.md` (`CONTRACT.md`, "Skills and agents").
+
+What a research project gets with no edit: `/run-next-task` checks `fetch_raw` at step 0 and before each batch of researcher calls, and stops with `Status: stopped: fetch_raw unavailable` instead of delegating; the researcher refuses a task when `fetch_raw` is missing; `summary-fetched` covers only a page `fetch_raw` could not open. The fetch-raw server answers Claude Code's handshake about twice as fast once its environment has been started once.
+
 ## 0.6.x to 0.7.0
 
 A minor release that changes the contract. Every host edits its `requires` line; a research project also changes how it reads its queue, and a consumer copies the kit again.

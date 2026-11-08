@@ -13,7 +13,8 @@ import doctor  # noqa: E402
 
 FIXTURES = HERE / "fixtures"
 EQUITY_FIXTURES = HERE.parents[3] / "test-fixtures"  # finance fixtures live outside the shipped plugin folder
-ENV_NAMES = ("FETCH_RAW_IDENTITY_HOSTS", "DEMO_IDENTITY", "DEMO_API_KEY", "EDGAR_IDENTITY", "FRED_API_KEY")
+ENV_NAMES = ("FETCH_RAW_IDENTITY_HOSTS", "DEMO_IDENTITY", "DEMO_API_KEY", "EDGAR_IDENTITY", "FRED_API_KEY",
+             "MCP_TIMEOUT")
 
 
 def copy_fixture(name: str, dest: Path) -> Path:

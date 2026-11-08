@@ -68,8 +68,8 @@ FAIL_CASES = {
     "config-unknown-nested-key": ("1", lambda r: edit(r, CONFIG, 'name = "demo-app"', 'name = "demo-app"\nurl = "x"')),
     "config-missing-key": ("1", lambda r: edit(r, CONFIG, 'decider = "requester"\n', "")),
     "config-wrong-type": ("1", lambda r: edit(r, CONFIG, 'env = ["DEMO_API_KEY"]', 'env = "DEMO_API_KEY"')),
-    "config-requires-excludes-installed": ("1", lambda r: edit(r, CONFIG, '">=0.7.0, <0.8.0"', '">=0.6.0, <0.7.0"')),
-    "config-requires-malformed": ("1", lambda r: edit(r, CONFIG, '">=0.7.0, <0.8.0"', '"~0.7"')),
+    "config-requires-excludes-installed": ("1", lambda r: edit(r, CONFIG, '">=0.8.0, <0.9.0"', '">=0.7.0, <0.8.0"')),
+    "config-requires-malformed": ("1", lambda r: edit(r, CONFIG, '">=0.8.0, <0.9.0"', '"~0.8"')),
     "config-no-tables": ("1", lambda r: (r / CONFIG).write_text('requires = ">=0.6.0"\n', encoding="utf-8")),
     "config-self-without-project": ("1", lambda r: (r / CONFIG).write_text(
         'requires = ">=0.6.0"\n[consumes]\nresearch = "self"\n', encoding="utf-8")),
@@ -201,6 +201,43 @@ def test_gitignore_lines_warn(valid):
     assert len(report.items) == 2
 
 
+def test_missing_mcp_timeout_warns_in_both_modes(valid):
+    (valid / ".claude" / "settings.json").unlink()
+    for mode in ("run", "setup"):
+        report, _ = diagnose(valid, mode)
+        assert by_check(report) == {"13": {"WARN"}}, report.items
+        assert "MCP_TIMEOUT" in report.items[0][2] and "30 s" in report.items[0][2]
+
+
+def test_mcp_timeout_from_the_environment_counts(valid, monkeypatch):
+    """The harness passes the user's settings env to the commands it runs, the doctor among them."""
+    (valid / ".claude" / "settings.json").unlink()
+    monkeypatch.setenv("MCP_TIMEOUT", "120000")
+    report, _ = diagnose(valid, "run")
+    assert report.items == []
+
+
+def test_settings_without_an_env_block_warn(valid):
+    (valid / ".claude" / "settings.json").write_text('{"enabledPlugins": {}}\n', encoding="utf-8")
+    report, _ = diagnose(valid, "run")
+    assert by_check(report) == {"13": {"WARN"}}
+
+
+def test_a_firecrawl_mcp_server_is_deprecated(valid):
+    (valid / ".mcp.json").write_text('{"mcpServers": {"firecrawl": {"command": "npx", "args": ["-y", "firecrawl-mcp"]}}}\n',
+                                     encoding="utf-8")
+    report, _ = diagnose(valid, "run")
+    assert by_check(report) == {"14": {"DEPRECATED"}}, report.items
+    assert "0.9.0" in report.items[0][2]
+    assert doctor.main(["--mode", "run", "--project", str(valid)]) == 0  # deprecated, not failing
+
+
+def test_other_mcp_servers_are_not_reported(valid):
+    (valid / ".mcp.json").write_text('{"mcpServers": {"other": {"command": "x"}}}\n', encoding="utf-8")
+    report, _ = diagnose(valid, "run")
+    assert report.items == []
+
+
 def test_fenced_and_quoted_examples_are_not_rules(valid):
     edit(valid, RULES, "## 4. Units, denominators and bases\n\nnone known",
          "## 4. Units, denominators and bases\n\n> ILLUSTRATIVE:\n>\n> ### Bad Id: example\n> - Check: x\n\n"
@@ -225,7 +262,7 @@ def test_consumer_context_older_than_release_tag_warns(tmp_path, monkeypatch):
     host = tmp_path / "app"
     host.mkdir()
     (host / "research-agent.toml").write_text(
-        f'requires = ">=0.7.0, <0.8.0"\n[consumes]\nresearch = "owner/research"\n', encoding="utf-8")
+        f'requires = ">=0.8.0, <0.9.0"\n[consumes]\nresearch = "owner/research"\n', encoding="utf-8")
     (host / "CLAUDE.md").write_text("Research: `research-agent.toml`\n", encoding="utf-8")
     (host / ".gitignore").write_text("__pycache__/\n*.pyc\n", encoding="utf-8")
     (host / "docs").mkdir()
@@ -251,7 +288,7 @@ def test_consumer_context_older_than_release_tag_warns(tmp_path, monkeypatch):
 def test_consumer_without_clone_warns(tmp_path):
     host = tmp_path / "app"
     host.mkdir()
-    (host / "research-agent.toml").write_text('requires = ">=0.7.0, <0.8.0"\n[consumes]\nresearch = "owner/nowhere"\n', encoding="utf-8")
+    (host / "research-agent.toml").write_text('requires = ">=0.8.0, <0.9.0"\n[consumes]\nresearch = "owner/nowhere"\n', encoding="utf-8")
     (host / "CLAUDE.md").write_text("`research-agent.toml`\n", encoding="utf-8")
     (host / ".gitignore").write_text("__pycache__/\n*.pyc\n", encoding="utf-8")
     (host / "docs").mkdir()
@@ -281,7 +318,7 @@ def test_no_config_fails_check_1_and_names_the_setup_mode(equity, valid):
 
 # ---------- equity after adoption (§2 config): bullet rules fail until they get IDs ----------
 
-EQUITY_CONFIG = '''requires = ">=0.7.0, <0.8.0"
+EQUITY_CONFIG = '''requires = ">=0.8.0, <0.9.0"
 
 [project]
 root = "docs/research"
@@ -306,6 +343,8 @@ def adopted(equity):
     (equity / "research-agent.toml").write_text(EQUITY_CONFIG, encoding="utf-8")
     edit(equity, "CLAUDE.md", "## Research\n", "## Research\n\nResearch config: `research-agent.toml`.\n")
     (equity / ".gitignore").write_text("__pycache__/\n*.pyc\n", encoding="utf-8")
+    (equity / ".claude").mkdir(exist_ok=True)
+    (equity / ".claude" / "settings.json").write_text('{"env": {"MCP_TIMEOUT": "120000"}}\n', encoding="utf-8")
     return equity
 
 
@@ -371,7 +410,7 @@ def test_cli_requires_a_mode():
 
 def test_help_lists_every_check():
     out = run_cli("--help").stdout
-    for check in ("1 ", "2 ", "3 ", "4a", "4b", "5 ", "6 ", "7 ", "8 ", "9 ", "10", "11", "12"):
+    for check in ("1 ", "2 ", "3 ", "4a", "4b", "5 ", "6 ", "7 ", "8 ", "9 ", "10", "11", "12", "13", "14"):
         assert f"\n  {check}" in out
 
 
@@ -419,6 +458,8 @@ def test_a_project_written_from_the_templates_passes(tmp_path):
     place("prompt.md", root / "templates" / "prompt.md")
     (repo / "CLAUDE.md").write_text("## Research\n\nResearch config: `research-agent.toml`.\n", encoding="utf-8")
     (repo / ".gitignore").write_text("__pycache__/\n*.pyc\n", encoding="utf-8")
+    (repo / ".claude").mkdir(exist_ok=True)
+    (repo / ".claude" / "settings.json").write_text('{"env": {"MCP_TIMEOUT": "120000"}}\n', encoding="utf-8")
     report, _ = diagnose(repo, "setup")
     assert report.items == [], report.items
 
