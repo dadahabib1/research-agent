@@ -15,7 +15,7 @@ What a host that adopts this plugin may depend on: names, paths, formats and beh
 At the repository root. It holds only what differs between hosts; everything else is fixed below. Unknown keys are an error.
 
 ```toml
-requires = ">=0.8.0, <0.9.0"           # required
+requires = ">=0.9.0, <0.10.0"          # required
 
 [project]                               # present when research runs in this repository
 root = "docs/research"                  # required
@@ -205,7 +205,7 @@ A Research commit of `pending <PR URL>` marks a row that waits for a research me
 ## Skills and agents
 
 - Skills: `research-protocol`, `research-writing`, `run-next-task` (`/run-next-task`, or `/run-next-task <topic>` for a named task), `new-research-project` (`/new-research-project`, modes new, adopt and consumer).
-- Agents, invoked by their plugin-scoped names as `subagent_type`: `research-agent:researcher` (web search and fetch only; launched without the user, project and local `CLAUDE.md` files, so project facts reach it only through the delegation prompt), `research-agent:reviewer` (reads and runs scripts; no web). A project that configures a raw-page fetcher as an MCP server named `firecrawl` makes its search and scrape tools available to the researcher; no other project tool reaches it. **Deprecated in 0.8.0; removed in 0.9.0:** the `firecrawl` server name and its two tool names in the researcher's tool list. No host is known to configure that server, and the plugin's Firecrawl fallback is inside `fetch_raw` (`FIRECRAWL_API_KEY`); the doctor reports a `firecrawl` server in the project's `.mcp.json` as DEPRECATED (check 14). A project that needs a different fetch server may place its own `.claude/agents/researcher.md` with `name: researcher`, the same frontmatter and body, and a `tools:` line that names its server's search and scrape tools and nothing else; `/run-next-task` then calls it by the bare name `researcher` in place of the plugin's.
+- Agents, invoked by their plugin-scoped names as `subagent_type`: `research-agent:researcher` (web search and fetch only; launched without the user, project and local `CLAUDE.md` files, so project facts reach it only through the delegation prompt), `research-agent:reviewer` (reads and runs scripts; no web). A project that configures a raw-page fetcher as an MCP server named `firecrawl` makes its search and scrape tools available to the researcher; no other project tool reaches it. **Deprecated in 0.8.0; removed in 0.10.0:** the `firecrawl` server name and its two tool names in the researcher's tool list. No host is known to configure that server, and the plugin's Firecrawl fallback is inside `fetch_raw` (`FIRECRAWL_API_KEY`); the doctor reports a `firecrawl` server in the project's `.mcp.json` as DEPRECATED (check 14). A project that needs a different fetch server may place its own `.claude/agents/researcher.md` with `name: researcher`, the same frontmatter and body, and a `tools:` line that names its server's search and scrape tools and nothing else; `/run-next-task` then calls it by the bare name `researcher` in place of the plugin's.
 
 ## Raw fetch tool
 

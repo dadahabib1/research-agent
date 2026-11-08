@@ -2,6 +2,17 @@
 
 What changes for a project between plugin versions, and what to do about it. `CONTRACT.md` lists the current contract; `CHANGELOG.md` lists every change by release.
 
+## 0.8.x to 0.9.0
+
+A minor release that changes the contract: a run checks `fetch_raw` once, at its start, and a page that will not open no longer stops a researcher or the run. Every host edits its `requires` line, and a consumer copies the kit again; nothing else in a project's files has to change.
+
+1. **Pin the release.** Where a project pins the marketplace source, change `"ref"` to `"v0.9.0"` (and `PLUGIN_REF` in a cloud environment's setup script).
+2. **Widen `requires`.** In `research-agent.toml`, replace `">=0.8.0, <0.9.0"` with `">=0.9.0, <0.10.0"`. Until then `/run-next-task` stops at step 0 with check 1's range FAIL.
+3. **Consumers copy the kit again.** Both kit files carry the 0.9.0 stamp; a 0.8.0 stamp is outside the new range (check 8). `/new-research-project` in adopt mode copies them.
+4. **Firecrawl MCP server.** Still deprecated; its removal moved from 0.9.0 to 0.10.0. Step 5 of "0.7.x to 0.8.0" still applies, with 0.10.0 as the deadline.
+
+What a research project gets with no edit: `/run-next-task` checks `fetch_raw` once, at step 0, and stops there as 0.8.0 did when the fetcher is down. After that check, a `fetch_raw` error on one page is a dead end for that page. The researcher returns `fetch_raw unavailable` only when calls to several different URLs have all errored and it judges the fetcher itself to be failing, and the run decides what follows.
+
 ## 0.7.x to 0.8.0
 
 A minor release that changes the contract: a run now stops when `fetch_raw` is unavailable, and the researcher's `firecrawl` tool names are deprecated. Every host edits its `requires` line; nothing else in a project's files has to change.
