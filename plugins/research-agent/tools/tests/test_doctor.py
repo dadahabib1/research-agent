@@ -68,8 +68,8 @@ FAIL_CASES = {
     "config-unknown-nested-key": ("1", lambda r: edit(r, CONFIG, 'name = "demo-app"', 'name = "demo-app"\nurl = "x"')),
     "config-missing-key": ("1", lambda r: edit(r, CONFIG, 'decider = "requester"\n', "")),
     "config-wrong-type": ("1", lambda r: edit(r, CONFIG, 'env = ["DEMO_API_KEY"]', 'env = "DEMO_API_KEY"')),
-    "config-requires-excludes-installed": ("1", lambda r: edit(r, CONFIG, '">=0.8.0, <0.9.0"', '">=0.7.0, <0.8.0"')),
-    "config-requires-malformed": ("1", lambda r: edit(r, CONFIG, '">=0.8.0, <0.9.0"', '"~0.8"')),
+    "config-requires-excludes-installed": ("1", lambda r: edit(r, CONFIG, '">=0.9.0, <0.10.0"', '">=0.8.0, <0.9.0"')),
+    "config-requires-malformed": ("1", lambda r: edit(r, CONFIG, '">=0.9.0, <0.10.0"', '"~0.9"')),
     "config-no-tables": ("1", lambda r: (r / CONFIG).write_text('requires = ">=0.6.0"\n', encoding="utf-8")),
     "config-self-without-project": ("1", lambda r: (r / CONFIG).write_text(
         'requires = ">=0.6.0"\n[consumes]\nresearch = "self"\n', encoding="utf-8")),
@@ -228,7 +228,7 @@ def test_a_firecrawl_mcp_server_is_deprecated(valid):
                                      encoding="utf-8")
     report, _ = diagnose(valid, "run")
     assert by_check(report) == {"14": {"DEPRECATED"}}, report.items
-    assert "0.9.0" in report.items[0][2]
+    assert "0.10.0" in report.items[0][2]
     assert doctor.main(["--mode", "run", "--project", str(valid)]) == 0  # deprecated, not failing
 
 
@@ -262,7 +262,7 @@ def test_consumer_context_older_than_release_tag_warns(tmp_path, monkeypatch):
     host = tmp_path / "app"
     host.mkdir()
     (host / "research-agent.toml").write_text(
-        f'requires = ">=0.8.0, <0.9.0"\n[consumes]\nresearch = "owner/research"\n', encoding="utf-8")
+        f'requires = ">=0.9.0, <0.10.0"\n[consumes]\nresearch = "owner/research"\n', encoding="utf-8")
     (host / "CLAUDE.md").write_text("Research: `research-agent.toml`\n", encoding="utf-8")
     (host / ".gitignore").write_text("__pycache__/\n*.pyc\n", encoding="utf-8")
     (host / "docs").mkdir()
@@ -288,7 +288,7 @@ def test_consumer_context_older_than_release_tag_warns(tmp_path, monkeypatch):
 def test_consumer_without_clone_warns(tmp_path):
     host = tmp_path / "app"
     host.mkdir()
-    (host / "research-agent.toml").write_text('requires = ">=0.8.0, <0.9.0"\n[consumes]\nresearch = "owner/nowhere"\n', encoding="utf-8")
+    (host / "research-agent.toml").write_text('requires = ">=0.9.0, <0.10.0"\n[consumes]\nresearch = "owner/nowhere"\n', encoding="utf-8")
     (host / "CLAUDE.md").write_text("`research-agent.toml`\n", encoding="utf-8")
     (host / ".gitignore").write_text("__pycache__/\n*.pyc\n", encoding="utf-8")
     (host / "docs").mkdir()
@@ -318,7 +318,7 @@ def test_no_config_fails_check_1_and_names_the_setup_mode(equity, valid):
 
 # ---------- equity after adoption (§2 config): bullet rules fail until they get IDs ----------
 
-EQUITY_CONFIG = '''requires = ">=0.8.0, <0.9.0"
+EQUITY_CONFIG = '''requires = ">=0.9.0, <0.10.0"
 
 [project]
 root = "docs/research"

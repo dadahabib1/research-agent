@@ -12,7 +12,7 @@ from conftest import KIT, commit, drift, git, init, lock, make_host, write
 
 EQUITY = KIT.parents[2] / "test-fixtures" / "equity"  # outside the shipped plugin folder
 APP_CONSUMES = '[consumes]\nresearch = "dadahabib1/equity_research"\n'
-REQUIRES = 'requires = ">=0.8.0, <0.9.0"\n'
+REQUIRES = 'requires = ">=0.9.0, <0.10.0"\n'
 
 
 def lock_hashes(text: str) -> list[tuple[str, str, str]]:
@@ -31,7 +31,7 @@ def equity_clone(tmp: Path) -> Path:
     research = init(tmp / "equity_research")
     files = {f"docs/research/decisions/{p.name}": p.read_text(encoding="utf-8").replace("\r\n", "\n")
              for p in (EQUITY / "decisions").glob("*.md")}
-    files["research-agent.toml"] = 'requires = ">=0.8.0, <0.9.0"\n[project]\nroot = "docs/research"\ndecider = "requester"\n'
+    files["research-agent.toml"] = 'requires = ">=0.9.0, <0.10.0"\n[project]\nroot = "docs/research"\ndecider = "requester"\n'
     commit(research, files, "equity decisions at 2712374")
     return research
 
@@ -93,7 +93,7 @@ def test_the_hash_is_the_apps_function():
 
 # ---------- a research repository with a config ----------
 
-CONFIG = '''requires = ">=0.8.0, <0.9.0"
+CONFIG = '''requires = ">=0.9.0, <0.10.0"
 [project]
 root = "research"
 decider = "requester"
@@ -381,7 +381,7 @@ def test_warns_when_its_stamp_is_outside_requires(tmp):
     research = research_repo(tmp)
     host = pin_all(tmp, research, ["d-one"])
     write(host, {"research-agent.toml": (host / "research-agent.toml").read_text(encoding="utf-8")
-                 .replace(REQUIRES, 'requires = ">=0.9.0"\n')})
+                 .replace(REQUIRES, 'requires = ">=0.10.0"\n')})
     out = drift(host, "--no-fetch")
     lines = reports(out)
     assert lines[0].startswith("WARN ") and "outside requires" in lines[0]

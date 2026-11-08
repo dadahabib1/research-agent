@@ -36,7 +36,7 @@ Checks:
   13 MCP_TIMEOUT is set, in the env block of .claude/settings.json or in the environment
      (the user's settings reach it there), so fetch-raw has time to start (WARN)
   14 .mcp.json configures no MCP server named firecrawl: the researcher's firecrawl tool names
-     are deprecated in 0.8.0 and removed in 0.9.0 (DEPRECATED)
+     are deprecated in 0.8.0 and removed in 0.10.0 (DEPRECATED)
 """
 
 from __future__ import annotations
@@ -581,7 +581,7 @@ def check_firecrawl_server(repo: Path, report: Report) -> None:
     servers = json_object(repo / ".mcp.json").get("mcpServers")
     if isinstance(servers, dict) and "firecrawl" in servers:
         report.add("DEPRECATED", "14", ".mcp.json configures an MCP server named firecrawl; the researcher's "
-                   "firecrawl tool names are deprecated in 0.8.0 and removed in 0.9.0. fetch_raw reaches "
+                   "firecrawl tool names are deprecated in 0.8.0 and removed in 0.10.0. fetch_raw reaches "
                    "Firecrawl itself when FIRECRAWL_API_KEY is set; a project that needs another fetch server "
                    "uses its own .claude/agents/researcher.md (UPGRADING.md, 0.8.0)")
 

@@ -4,6 +4,20 @@ Every change to the plugin, by release. A pull request adds a line under `## Unr
 
 ## Unreleased
 
+## 0.9.0 (2026-11-08)
+
+A run checks its raw fetcher once, at its start, and a page that `fetch_raw` cannot open no longer stops a researcher or the run. A contract change: every host edits its `requires` line, and consumers copy the kit again (`UPGRADING.md`).
+
+- Changed: one fetcher check per run, at step 0 (#65). `/run-next-task` no longer checks `fetch_raw` before each batch of researcher calls or before the sweep, and a researcher's `fetch_raw unavailable` no longer stops the run: the run logs the line and decides whether to delegate the pages again, leave them to the sweep, ask the requester, or stop early. The researcher treats a `fetch_raw` call that errors on one page as a dead end for that page (recorded under Dead ends with the error text; retried once, or opened by another route, if the page matters), and returns `fetch_raw unavailable` only when calls to several different URLs have all errored and it judges the fetcher itself to be failing. WebFetch still never stands in for `fetch_raw`. On 2026-11-08, under 0.8.0, one page's tool error stopped a researcher mid-task and nearly stopped a run whose fetcher answered 18 more calls after it; the requester's rule: "It's one test at the beginning of the research agent. That's the entire problem."
+- Changed: the `firecrawl` MCP server name and its two tool names in the researcher's tool list, deprecated in 0.8.0, are now removed in 0.10.0 instead of 0.9.0. The doctor's check 14 message, `CONTRACT.md` and the README say so.
+- Kit: `INTEGRATION.md` names contract 0.9 and `v0.9.x`; both files are restamped 0.9.0, so consumers copy the kit again. The drift tool's code is unchanged.
+
+### Contract
+
+- Changed: the fetcher check runs once, at step 0; the check before each batch of researcher calls, and the run's stop on a researcher's `fetch_raw unavailable`, are gone. The researcher returns `fetch_raw unavailable` when `fetch_raw` is not among its tools, or when calls to several different URLs have all errored and it judges the fetcher to be failing; a single failed call no longer triggers it.
+- Changed: the `firecrawl` deprecation's removal moves from 0.9.0 to 0.10.0.
+- Unchanged: `Status: stopped: fetch_raw unavailable` at step 0; the `summary-fetched` rule; the `fetch_raw` tool, its arguments, header fields, statuses and environment variables; skill and agent names; the hand-back's labels; the queue, the selector, the lock and the kit's paths and command lines.
+
 ## 0.8.0 (2026-11-08)
 
 A run stops when its raw fetcher is down, the researcher no longer counts on Firecrawl tools that no server provides, and the fetch-raw server starts about twice as fast. A contract change: every host edits its `requires` line (`UPGRADING.md`).

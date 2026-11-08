@@ -10,7 +10,7 @@ import pytest
 
 import next_task as nt
 
-CONFIG = 'requires = ">=0.8.0, <0.9.0"\n[project]\nroot = "research"\ndecider = "requester"\n'
+CONFIG = 'requires = ">=0.9.0, <0.10.0"\n[project]\nroot = "research"\ndecider = "requester"\n'
 QUEUE = """# Research queue
 
 | Task | Prompt | Deliverable | Prerequisites | Status |
