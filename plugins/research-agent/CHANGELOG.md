@@ -4,6 +4,13 @@ Every change to the plugin, by release. A pull request adds a line under `## Unr
 
 ## Unreleased
 
+- Changed: one fetcher check per run, at step 0 (#65). `/run-next-task` no longer checks `fetch_raw` before each batch of researcher calls or before the sweep, and a researcher's `fetch_raw unavailable` no longer stops the run: the run logs the line and decides whether to delegate the pages again, leave them to the sweep, ask the requester, or stop early. The researcher treats a `fetch_raw` call that errors on one page as a dead end for that page (recorded under Dead ends with the error text; retried once, or opened by another route, if the page matters), and returns `fetch_raw unavailable` only when calls to several different URLs have all errored and it judges the fetcher itself to be failing. WebFetch still never stands in for `fetch_raw`. On 2026-11-08, under 0.8.0, one page's tool error stopped a researcher mid-task and nearly stopped a run whose fetcher answered 18 more calls after it; the requester's rule: "It's one test at the beginning of the research agent. That's the entire problem."
+
+### Contract
+
+- Changed: the fetcher check runs once, at step 0; the check before each batch of researcher calls, and the run's stop on a researcher's `fetch_raw unavailable`, are gone. The researcher returns `fetch_raw unavailable` when `fetch_raw` is not among its tools, or when calls to several different URLs have all errored and it judges the fetcher to be failing; a single failed call no longer triggers it.
+- Unchanged: `Status: stopped: fetch_raw unavailable` at step 0, the `summary-fetched` rule, and the `fetch_raw` tool.
+
 ## 0.8.0 (2026-11-08)
 
 A run stops when its raw fetcher is down, the researcher no longer counts on Firecrawl tools that no server provides, and the fetch-raw server starts about twice as fast. A contract change: every host edits its `requires` line (`UPGRADING.md`).
