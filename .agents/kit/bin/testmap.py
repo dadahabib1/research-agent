@@ -253,11 +253,40 @@ def is_pytest(argv) -> bool:
 def clean_run(root: Path) -> list[str]:
     """The project's `merge.clean_run` from agent-kit.toml at `root` ([] when there is none, or it does not read)."""
     try:
-        data = tomllib.loads((root / "agent-kit.toml").read_text(encoding="utf-8"))
+        data = tomllib.loads((root / "agent-kit.toml").read_text(encoding="utf-8-sig"))
     except (OSError, tomllib.TOMLDecodeError):
         return []
     found = data.get("merge", {}).get("clean_run", [])
     return [str(a) for a in found] if isinstance(found, list) else []
+
+
+def reviewer_checkouts(root: Path) -> list[str]:
+    """The reviewer checkouts inside `root` (agent-kit.local.toml's `reviewer_checkouts`, default codex and codex-b;
+    decision 78 keeps them in the project's folder) that exist: clones of the project, so pytest run from the root
+    would collect their tests too, the same file names twice ("import file mismatch", finance-hub, 2026-11-13)."""
+    try:
+        data = tomllib.loads((root / "agent-kit.local.toml").read_text(encoding="utf-8-sig"))
+        found = data.get("reviewer_checkouts", ["codex", "codex-b"])
+    except (OSError, tomllib.TOMLDecodeError):
+        found = ["codex", "codex-b"]
+    out = []
+    for c in found if isinstance(found, list) else []:
+        path = Path(str(c)) if Path(str(c)).is_absolute() else root / str(c)
+        try:
+            rel = path.resolve().relative_to(root.resolve())
+        except ValueError:
+            continue  # outside the checkout: pytest never reaches it
+        if path.is_dir() and rel.parts:
+            out.append(rel.as_posix())
+    return out
+
+
+def skip_checkouts(argv: list[str] | None, root: Path) -> list[str] | None:
+    """A pytest command with `--ignore=<checkout>` for each reviewer checkout inside `root` (issue #190); any other
+    command, or none, unchanged."""
+    if not argv or not is_pytest(argv):
+        return argv
+    return [*argv, *(f"--ignore={c}" for c in reviewer_checkouts(root))]
 
 
 def command(selection: Selection, python: str = sys.executable, clean: list[str] | None = None) -> list[str] | None:
@@ -332,7 +361,7 @@ def main(argv=None) -> int:
         return 2
     for line in selection.lines:
         print(line)
-    argv_ = command(selection, clean=clean_run(root))
+    argv_ = skip_checkouts(command(selection, clean=clean_run(root)), root)
     if argv_ is None:
         print("command: none, " + ("no changed path maps to a test" if paths else "no changed paths"))
         return 0
