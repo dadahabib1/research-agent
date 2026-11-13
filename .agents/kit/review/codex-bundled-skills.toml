@@ -1,0 +1,31 @@
+# Codex's own bundled skills a review may load (contract C7 section 5, decisions 74 and 92). Every other
+# skill whose root is not the checkout's .agents/skills/ is turned off by name for the review, and a render
+# that still lists one refuses the review. A skill is allowed only by name and source together, so a user's
+# skill named like a bundled one is still turned off. `source` is a folder under <CODEX_HOME>/skills/.
+# Filled from the first render (2026-10-17, Codex 0.162.1, an empty CODEX_HOME): research/design-integration/
+# verify/5.2-codex-isolation-2026-10-14.md saw three or four `.system` skills; this render listed four.
+format = "codex-bundled-skills"
+version = 1
+
+# The capacity fallback (C7 section 6, decision 77): a reviewer run that exits non-zero with one of these in
+# its output (case ignored) reruns once on reviewer.fallback.*. Codex's capacity text is not measured, so
+# the list is short and any error it does not match fails the review: a wrong list fails closed. A usage
+# limit is never a capacity error, so an output naming one of `not_capacity` does not fall back.
+capacity = ["at capacity", "server_is_overloaded", "model is overloaded", "overloaded_error"]
+not_capacity = ["usage limit", "rate limit", "quota"]
+
+[[skill]]
+name = "imagegen"
+source = ".system"
+
+[[skill]]
+name = "openai-docs"
+source = ".system"
+
+[[skill]]
+name = "skill-creator"
+source = ".system"
+
+[[skill]]
+name = "skill-installer"
+source = ".system"

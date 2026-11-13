@@ -1,0 +1,407 @@
+# The ownership manifest (contract C2 section 2): every file the kit ships, and its owner kind.
+# kit = kit-owned whole file; block = the kit's marked block in a shared file;
+# entries = kit-managed entries in a shared settings file; project = made once, then the project's.
+format = "ownership"
+version = 1
+
+[[file]]
+path = "AGENTS.md"
+owner = "block"
+
+[[file]]
+path = "CLAUDE.md"
+owner = "block"
+
+[[file]]
+path = ".gitignore"
+owner = "block"
+
+[[file]]
+path = ".agents/kit/ownership.toml"
+owner = "kit"
+
+[[file]]
+path = ".agents/kit/config/schema.toml"
+owner = "kit"
+
+[[file]]
+path = ".agents/kit/bin/kitconfig.py"
+owner = "kit"
+
+[[file]]
+path = ".agents/kit/bin/launch.py"
+owner = "kit"
+
+[[file]]
+path = ".agents/kit/bin/workfiles.py"
+owner = "kit"
+
+[[file]]
+path = ".agents/kit/bin/usage.py"
+owner = "kit"
+
+[[file]]
+path = ".agents/kit/bin/notices.py"
+owner = "kit"
+
+[[file]]
+path = ".agents/kit/bin/tick.py"
+owner = "kit"
+
+[[file]]
+path = ".agents/kit/bin/kitlock.py"
+owner = "kit"
+
+[[file]]
+path = ".agents/kit/bin/review.py"
+owner = "kit"
+
+[[file]]
+path = ".agents/kit/review/codex-bundled-skills.toml"
+owner = "kit"
+
+[[file]]
+path = ".agents/kit/review/findings.schema.json"
+owner = "kit"
+
+[[file]]
+path = ".agents/kit/review/kinds.toml"
+owner = "kit"
+
+[[file]]
+path = ".agents/kit/review/triager.md"
+owner = "kit"
+
+[[file]]
+path = ".agents/skills/review/SKILL.md"
+owner = "kit"
+
+[[file]]
+path = ".agents/skills/review/kit-standard.md"
+owner = "kit"
+
+[[file]]
+path = ".agents/skills/review/standard.md"   # copied once at install (copier.yml _skip_if_exists), then yours
+owner = "project"
+
+[[file]]
+path = ".agents/kit/bin/merge.py"
+owner = "kit"
+
+[[file]]
+path = ".agents/kit/bin/escalate.py"
+owner = "kit"
+
+[[file]]
+path = ".agents/kit/bin/formats.py"
+owner = "kit"
+
+[[file]]
+path = ".agents/kit/bin/testmap.py"
+owner = "kit"
+
+[[file]]
+path = ".agents/kit/templates/brief.md"
+owner = "kit"
+
+[[file]]
+path = ".agents/kit/templates/message.md"
+owner = "kit"
+
+[[file]]
+path = ".agents/kit/templates/ready.md"
+owner = "kit"
+
+[[file]]
+path = ".agents/kit/templates/blocked.md"
+owner = "kit"
+
+[[file]]
+path = ".agents/kit/templates/escalation.md"
+owner = "kit"
+
+[[file]]
+path = ".agents/kit/templates/answer.md"
+owner = "kit"
+
+[[file]]
+path = ".agents/kit/templates/handoff.md"
+owner = "kit"
+
+[[file]]
+path = ".agents/kit/templates/state-builder.md"
+owner = "kit"
+
+[[file]]
+path = ".agents/kit/templates/state-orchestrator.md"
+owner = "kit"
+
+[[file]]
+path = ".agents/kit/templates/tasks.md"
+owner = "kit"
+
+[[file]]
+path = ".agents/kit/templates/probe.md"
+owner = "kit"
+
+[[file]]
+path = ".agents/kit/templates/steer.md"
+owner = "kit"
+
+[[file]]
+path = ".agents/kit/hooks/guard.py"
+owner = "kit"
+
+[[file]]
+path = ".agents/kit/settings-entries.json"
+owner = "kit"
+
+[[file]]
+path = ".agents/kit/templates/prose-pr.md"   # the prose PR shape (C8 section 11), used with gh pr create --body-file
+owner = "kit"
+
+[[file]]
+path = ".agents/kit/tests/test_kitconfig.py"
+owner = "kit"
+
+[[file]]
+path = ".agents/kit/tests/test_guard.py"
+owner = "kit"
+
+[[file]]
+path = ".agents/kit/tests/test_launch.py"
+owner = "kit"
+
+[[file]]
+path = ".agents/kit/tests/test_usage_notices.py"
+owner = "kit"
+
+[[file]]
+path = ".agents/kit/tests/test_banned_calls.py"
+owner = "kit"
+
+[[file]]
+path = ".agents/kit/tests/test_merge.py"
+owner = "kit"
+
+[[file]]
+path = ".agents/kit/tests/test_schema.py"
+owner = "kit"
+
+[[file]]
+path = ".agents/kit/tests/test_tick.py"
+owner = "kit"
+
+[[file]]
+path = ".claude/skills/builder/SKILL.md"
+owner = "kit"
+
+[[file]]
+path = ".claude/skills/orchestrator/SKILL.md"
+owner = "kit"
+
+[[file]]
+path = ".claude/skills/startup/SKILL.md"
+owner = "kit"
+
+[[file]]
+path = "docs/solutions/README.md"   # the lesson folder's description; the lesson files beside it are the project's (#160)
+owner = "kit"
+
+# ce-compound: Every's skill (MIT, LICENSE beside it), copied unedited at d307bdb but for its freedom line (issue #160)
+
+[[file]]
+path = ".claude/skills/ce-compound/LICENSE"
+owner = "kit"
+
+[[file]]
+path = ".claude/skills/ce-compound/SKILL.md"
+owner = "kit"
+
+[[file]]
+path = ".claude/skills/ce-compound/assets/resolution-template.md"
+owner = "kit"
+
+[[file]]
+path = ".claude/skills/ce-compound/references/agents/best-practices-researcher.md"
+owner = "kit"
+
+[[file]]
+path = ".claude/skills/ce-compound/references/agents/data-integrity-guardian.md"
+owner = "kit"
+
+[[file]]
+path = ".claude/skills/ce-compound/references/agents/framework-docs-researcher.md"
+owner = "kit"
+
+[[file]]
+path = ".claude/skills/ce-compound/references/agents/pattern-recognition-specialist.md"
+owner = "kit"
+
+[[file]]
+path = ".claude/skills/ce-compound/references/agents/performance-oracle.md"
+owner = "kit"
+
+[[file]]
+path = ".claude/skills/ce-compound/references/agents/security-sentinel.md"
+owner = "kit"
+
+[[file]]
+path = ".claude/skills/ce-compound/references/agents/session-historian.md"
+owner = "kit"
+
+[[file]]
+path = ".claude/skills/ce-compound/references/assembly.md"
+owner = "kit"
+
+[[file]]
+path = ".claude/skills/ce-compound/references/concepts-vocabulary.md"
+owner = "kit"
+
+[[file]]
+path = ".claude/skills/ce-compound/references/enhancement.md"
+owner = "kit"
+
+[[file]]
+path = ".claude/skills/ce-compound/references/form.md"
+owner = "kit"
+
+[[file]]
+path = ".claude/skills/ce-compound/references/grounding-validation.md"
+owner = "kit"
+
+[[file]]
+path = ".claude/skills/ce-compound/references/lightweight.md"
+owner = "kit"
+
+[[file]]
+path = ".claude/skills/ce-compound/references/modes.md"
+owner = "kit"
+
+[[file]]
+path = ".claude/skills/ce-compound/references/refresh-and-discoverability.md"
+owner = "kit"
+
+[[file]]
+path = ".claude/skills/ce-compound/references/refresh/classify.md"
+owner = "kit"
+
+[[file]]
+path = ".claude/skills/ce-compound/references/refresh/commit.md"
+owner = "kit"
+
+[[file]]
+path = ".claude/skills/ce-compound/references/refresh/discoverability.md"
+owner = "kit"
+
+[[file]]
+path = ".claude/skills/ce-compound/references/refresh/investigate.md"
+owner = "kit"
+
+[[file]]
+path = ".claude/skills/ce-compound/references/refresh/modes.md"
+owner = "kit"
+
+[[file]]
+path = ".claude/skills/ce-compound/references/refresh/overview.md"
+owner = "kit"
+
+[[file]]
+path = ".claude/skills/ce-compound/references/refresh/per-action-flows.md"
+owner = "kit"
+
+[[file]]
+path = ".claude/skills/ce-compound/references/refresh/report.md"
+owner = "kit"
+
+[[file]]
+path = ".claude/skills/ce-compound/references/refresh/scope.md"
+owner = "kit"
+
+[[file]]
+path = ".claude/skills/ce-compound/references/refresh/worth-audit.md"
+owner = "kit"
+
+[[file]]
+path = ".claude/skills/ce-compound/references/report.md"
+owner = "kit"
+
+[[file]]
+path = ".claude/skills/ce-compound/references/research.md"
+owner = "kit"
+
+[[file]]
+path = ".claude/skills/ce-compound/references/schema.yaml"
+owner = "kit"
+
+[[file]]
+path = ".claude/skills/ce-compound/references/session-history.md"
+owner = "kit"
+
+[[file]]
+path = ".claude/skills/ce-compound/references/yaml-schema.md"
+owner = "kit"
+
+[[file]]
+path = ".claude/skills/ce-compound/scripts/packs-resolve.py"
+owner = "kit"
+
+[[file]]
+path = ".claude/skills/ce-compound/scripts/session-history/discover-sessions.sh"
+owner = "kit"
+
+[[file]]
+path = ".claude/skills/ce-compound/scripts/session-history/extract-errors.py"
+owner = "kit"
+
+[[file]]
+path = ".claude/skills/ce-compound/scripts/session-history/extract-metadata.py"
+owner = "kit"
+
+[[file]]
+path = ".claude/skills/ce-compound/scripts/session-history/extract-skeleton.py"
+owner = "kit"
+
+[[file]]
+path = ".claude/skills/ce-compound/scripts/validate-doc-claims.py"
+owner = "kit"
+
+[[file]]
+path = ".claude/skills/ce-compound/scripts/validate-frontmatter.py"
+owner = "kit"
+
+[[file]]
+path = ".agents/kit/tests/test_kitlock.py"
+owner = "kit"
+
+[[file]]
+path = ".agents/kit/tests/test_review.py"
+owner = "kit"
+
+[[file]]
+path = ".agents/kit/tests/test_formats.py"
+owner = "kit"
+
+[[file]]
+path = "{{_copier_conf.answers_file}}.jinja"   # lands as the git-ignored .copier-answers.yml (C1 section 6)
+owner = "kit"
+
+[[file]]
+path = "agent-kit.toml"
+owner = "project"
+rendered = true
+
+[[file]]
+path = "agent-kit.local.toml"
+owner = "project"
+rendered = true
+
+[[file]]
+path = ".claude/settings.json"   # the kit's entries, appended by the install (C2 section 4)
+owner = "entries"
+rendered = true
+
+[[file]]
+path = ".codex/hooks.json"
+owner = "entries"
+rendered = true

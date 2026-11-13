@@ -1,0 +1,459 @@
+# The config schema and the kit's defaults: one file, one copy (contract C3).
+# Every setting a project can have is one [key."<dotted.name>"] table here. The rules this file does
+# not express as data (precedence, cross-field checks, error format) are in agent-kit's
+# docs/contracts/C3-config.md. A setting without `default` is required and is written at bootstrap.
+#
+# Fields per key:
+#   file      "project" (agent-kit.toml, committed) or "local" (agent-kit.local.toml, this machine)
+#   type      string | integer | float | boolean | string-list | path | path-list | glob-list
+#   default   the kit default; absent means required
+#   choices   the name of a list in [fixed] the value must come from (for lists: every item)
+#   allowed   an inline list of allowed values
+#   min, max  bounds for integer and float
+#   pattern   a regular expression a string must match in full
+#   labels    how the default was chosen, from fixed.labels (decision 81, rule 1)
+#   doc       the one-line comment written above the setting
+#   added_in  the kit release that added the key (the update report lists keys newer than the project)
+
+format = "config-schema"
+version = 1
+
+[fixed]
+# Not settings: changing any of these is a kit release.
+# Always-yours paths: a PR touching any of them is yours to merge (decisions 70, 83).
+# `.agents/**` covers the kit's scripts (C1). tickets.your_paths can only add to this list.
+control_paths = ["AGENTS.md", "CLAUDE.md", ".claude/**", ".agents/**", ".codex/**", "kit.lock", "agent-kit.toml"]
+labels = ["measured", "ran", "reported", "replayed", "judgment", "your value"]
+efforts = ["low", "medium", "high", "xhigh", "max"]
+# Pinned model IDs (decision 35). A model not listed here is refused; adding one is a kit release.
+claude_models = ["claude-opus-5-5", "claude-sonnet-5-5", "claude-haiku-5-5", "claude-fable-5-1"]
+codex_models = ["gpt-6-astra", "gpt-6.1-sol"]
+# Claude's context window in tokens, for the context barrier's percent (C5 section 3): 1,000,000 for
+# every pinned Claude model (Anthropic's models overview).
+claude_context_window = 1000000
+
+[header]
+project = [
+  "agent-kit.toml: every setting for this project, in one place (committed).",
+  "Changing a value here is a PR you merge. Machine-only values live in agent-kit.local.toml.",
+  "Labels say how each default was chosen: measured, ran, reported, replayed, judgment, your value.",
+]
+local = [
+  "agent-kit.local.toml: this computer only (never committed).",
+]
+
+# ---------------------------------------------------------------- [project]
+
+[key."project.name"]
+file = "project"
+type = "string"
+pattern = "[a-z0-9][a-z0-9_-]*"
+labels = ["your value"]
+doc = "The project's name; also the prefix of every session name (decision 52). Bootstrap offers the folder name."
+added_in = "v0.1.0"
+
+[key."project.high_stakes"]
+file = "project"
+type = "string-list"
+default = []
+labels = ["judgment"]
+doc = "What the orchestrator may never decide alone (decision 58): changes touching these go to you. Bootstrap asks."
+added_in = "v0.1.0"
+
+# ---------------------------------------------------------------- [sessions]
+
+[key."sessions.orchestrator.model"]
+file = "project"
+type = "string"
+choices = "claude_models"
+default = "claude-opus-5-5"
+labels = ["ran"]
+doc = "Model the orchestrator starts with."
+added_in = "v0.1.0"
+
+[key."sessions.orchestrator.effort"]
+file = "project"
+type = "string"
+choices = "efforts"
+default = "high"
+labels = ["ran"]
+doc = "Effort the orchestrator starts with."
+added_in = "v0.1.0"
+
+[key."sessions.builder.model"]
+file = "project"
+type = "string"
+choices = "claude_models"
+default = "claude-opus-5-5"
+labels = ["ran"]
+doc = "Model a builder starts with."
+added_in = "v0.1.0"
+
+[key."sessions.builder.effort"]
+file = "project"
+type = "string"
+choices = "efforts"
+default = "xhigh"
+labels = ["ran"]
+doc = "Effort a builder starts with; a brief may raise it for one ticket, with the reason, and \"max\" only with your OK (decision 63)."
+added_in = "v0.1.0"
+
+[key."sessions.triager.model"]
+file = "project"
+type = "string"
+choices = "claude_models"
+default = "claude-opus-5-5"
+labels = ["judgment"]
+doc = "Model of the triager, the one call after each review round that gives each finding a verdict (decisions 33, 34, 73)."
+added_in = "v0.1.0"
+
+[key."sessions.triager.effort"]
+file = "project"
+type = "string"
+choices = "efforts"
+default = "high"
+labels = ["judgment"]
+doc = "Effort of the triager."
+added_in = "v0.1.0"
+
+[key."sessions.reader.model"]
+file = "project"
+type = "string"
+choices = "claude_models"
+default = "claude-opus-5-5"
+labels = ["judgment"]
+doc = "Model of the read-only helper (decisions 27, 60)."
+added_in = "v0.1.0"
+
+[key."sessions.reader.effort"]
+file = "project"
+type = "string"
+choices = "efforts"
+default = "high"
+labels = ["judgment"]
+doc = "Effort of the read-only helper."
+added_in = "v0.1.0"
+
+[key."sessions.max_builders"]
+file = "project"
+type = "integer"
+min = 1
+default = 1
+labels = ["ran"]
+doc = "How many builders run at once, below the memory floor (decision 46); an escalated builder waiting idle does not count (decision 123)."
+added_in = "v0.1.0"
+
+[key."sessions.escalation_wait_hours"]
+file = "project"
+type = "float"
+min = 0
+default = 8.0
+labels = ["your value"]
+doc = "Hours an escalated builder waits idle, its cache kept warm, before it hands off; 0 hands off at once (decision 123)."
+added_in = "v0.1.0"
+
+# ---------------------------------------------------------------- [reviewer]
+
+[key."reviewer.engine"]
+file = "project"
+type = "string"
+allowed = ["codex", "claude"]
+default = "codex"
+labels = ["your value"]
+doc = "Which harness reviews (decision 25)."
+added_in = "v0.1.0"
+
+[key."reviewer.model"]
+file = "project"
+type = "string"
+default = "gpt-6-astra"
+labels = ["measured"]
+doc = "Reviewer model: one session, no helpers (decision 77). Must be a model of the engine (rule V5)."
+added_in = "v0.1.0"
+
+[key."reviewer.effort"]
+file = "project"
+type = "string"
+choices = "efforts"
+default = "high"
+labels = ["measured"]
+doc = "Reviewer effort (decision 77)."
+added_in = "v0.1.0"
+
+[key."reviewer.fallback.model"]
+file = "project"
+type = "string"
+default = "gpt-6.1-sol"
+labels = ["your value"]
+doc = "Used once, on a capacity error only (decision 77). Must be a model of the engine (rule V5)."
+added_in = "v0.1.0"
+
+[key."reviewer.fallback.effort"]
+file = "project"
+type = "string"
+choices = "efforts"
+default = "high"
+labels = ["your value"]
+doc = "Effort of the fallback reviewer."
+added_in = "v0.1.0"
+
+[key."reviewer.max_fix_rounds"]
+file = "project"
+type = "integer"
+min = 1
+default = 3
+labels = ["measured"]
+doc = "Fix rounds before the ticket goes to you; the next round is yours (decision 75)."
+added_in = "v0.1.0"
+
+# ---------------------------------------------------------------- [tickets]
+
+[key."tickets.stacking"]
+file = "project"
+type = "boolean"
+default = true
+labels = ["measured"]
+doc = "A ticket on the same files builds on the one before (decisions 45, 67)."
+added_in = "v0.1.0"
+
+[key."tickets.auto_merge"]
+file = "project"
+type = "boolean"
+default = false
+labels = ["your value"]
+doc = "The orchestrator merges ticket PRs once earned. Off until you turn it on, after the adoption tests and the behaviour suite pass (decisions 70, 87; C8 section 2)."
+added_in = "v0.1.0"
+
+[key."tickets.earn_after"]
+file = "project"
+type = "integer"
+min = 1
+default = 3
+labels = ["your value"]
+doc = "Clean ticket merges by you before the orchestrator may merge ticket PRs itself (decision 70)."
+added_in = "v0.1.0"
+
+[key."tickets.hand_back_after_escalations"]
+file = "project"
+type = "integer"
+min = 1
+default = 3
+labels = ["your value"]
+doc = "Escalations in a row that hand self-merge back to you; a revert or a red main also does (decision 70)."
+added_in = "v0.1.0"
+
+[key."tickets.your_paths"]
+file = "project"
+type = "glob-list"
+default = ["docs/spec/**", "docs/adr/**", "docs/agents/**"]
+labels = ["your value"]
+doc = "Paths whose PRs are always yours, added to the kit's fixed control paths, which cannot be removed (decisions 70, 83, 96)."
+added_in = "v0.1.0"
+
+# ---------------------------------------------------------------- [merge]
+
+[key."merge.clean_run"]
+file = "project"
+type = "string-list"
+default = []
+labels = ["your value"]
+doc = "The clean run, one command as an argv list: the offline suite plus the free live tests, run on every merge result and on main after it; empty refuses every merge (decision 66; C8 section 7)."
+added_in = "v0.1.0"
+
+[key."merge.run_timeout_minutes"]
+file = "project"
+type = "integer"
+min = 1
+default = 30
+labels = ["your value"]
+doc = "Minutes a clean run may take; a run that does not finish is red and its process tree is killed (C8 section 7)."
+added_in = "v0.1.0"
+
+[key."merge.paid_suite"]
+file = "project"
+type = "string-list"
+default = []
+labels = ["your value"]
+doc = "The paid suite, an argv list run once after a merge that touches merge.paid_paths, after the merge lock is released (decisions 66, 113)."
+added_in = "v0.1.0"
+
+[key."merge.paid_paths"]
+file = "project"
+type = "glob-list"
+default = []
+labels = ["your value"]
+doc = "Paths whose change makes the paid suite due after the merge: data, research or pipeline code (decision 66)."
+added_in = "v0.1.0"
+
+# ---------------------------------------------------------------- [context]
+
+[key."context.orchestrator.warn"]
+file = "project"
+type = "integer"
+min = 1
+max = 86
+default = 40
+labels = ["judgment", "replayed"]
+doc = "Percent of the context window at which the orchestrator is warned (decision 50)."
+added_in = "v0.1.0"
+
+[key."context.orchestrator.handoff"]
+file = "project"
+type = "integer"
+min = 2
+max = 87
+default = 45
+labels = ["judgment", "replayed"]
+doc = "Percent at which the orchestrator hands off to a fresh session (decision 50)."
+added_in = "v0.1.0"
+
+[key."context.builder.warn"]
+file = "project"
+type = "integer"
+min = 1
+max = 86
+default = 50
+labels = ["judgment", "replayed"]
+doc = "Percent at which a builder is warned."
+added_in = "v0.1.0"
+
+[key."context.builder.handoff"]
+file = "project"
+type = "integer"
+min = 2
+max = 87
+default = 55
+labels = ["judgment", "replayed"]
+doc = "Percent at which a builder hands off."
+added_in = "v0.1.0"
+
+[key."context.reviewer.warn"]
+file = "project"
+type = "integer"
+min = 1
+max = 94
+default = 55
+labels = ["judgment", "replayed"]
+doc = "Percent at which the reviewer is warned."
+added_in = "v0.1.0"
+
+[key."context.reviewer.handoff"]
+file = "project"
+type = "integer"
+min = 2
+max = 95
+default = 70
+labels = ["judgment", "replayed"]
+doc = "Percent at which the reviewer hands off."
+added_in = "v0.1.0"
+
+[key."context.rotate_orchestrator_after_merges"]
+file = "project"
+type = "integer"
+min = 1
+default = 3
+labels = ["ran"]
+doc = "Merges after which the orchestrator rotates to a fresh session (decision 48)."
+added_in = "v0.1.0"
+
+# ---------------------------------------------------------------- [usage]
+
+[key."usage.warn_at"]
+file = "project"
+type = "integer"
+min = 1
+max = 100
+default = 80
+labels = ["your value"]
+doc = "Percent of your plan's usage limit at which you are warned (decisions 49, 53)."
+added_in = "v0.1.0"
+
+[key."usage.lower_effort_at"]
+file = "project"
+type = "integer"
+min = 1
+max = 100
+default = 80
+labels = ["your value"]
+doc = "Percent from which newly launched sessions run one effort level lower (decision 53)."
+added_in = "v0.1.0"
+
+[key."usage.no_new_sessions_at"]
+file = "project"
+type = "integer"
+min = 1
+max = 100
+default = 95
+labels = ["your value"]
+doc = "Percent from which no new session starts; a replacement still can (decision 49)."
+added_in = "v0.1.0"
+
+# ---------------------------------------------------------------- [probe]
+
+[key."probe.sample"]
+file = "project"
+type = "path"
+default = "probe/sample/"
+labels = ["judgment"]
+doc = "Where the first impact probe keeps its real-data sample, for later probes to reuse (decision 60)."
+added_in = "v0.1.0"
+
+# ---------------------------------------------------------------- [modules]
+
+[key."modules.enabled"]
+file = "project"
+type = "string-list"
+default = []
+labels = ["judgment"]
+doc = "Modules this project uses; each keeps its own settings in its own folder (decision 54)."
+added_in = "v0.1.0"
+
+# ---------------------------------------------------------------- agent-kit.local.toml
+
+[key."memory_floor_gb"]
+file = "local"
+type = "float"
+min = 0.5
+default = 3.0
+labels = ["judgment"]
+doc = "Free memory in GB below which the launch script starts no session (decision 52); equity_analyst lowered it to 2.1 by hand [reported]."
+added_in = "v0.1.0"
+
+[key."secret_files"]
+file = "local"
+type = "path-list"
+default = [".env"]
+labels = ["judgment"]
+doc = "The project's own ignored files, copied into each new worktree and each reviewer checkout, never printed (decision 65)."
+added_in = "v0.1.0"
+
+[key."coordination"]
+file = "local"
+type = "path"
+default = ".coordination"
+labels = ["ran"]
+doc = "The coordination folder: briefs, verdicts, handoffs, state files, the merge record (decision 42)."
+added_in = "v0.1.0"
+
+[key."reviewer_checkouts"]
+file = "local"
+type = "path-list"
+default = ["codex", "codex-b"]
+labels = ["ran"]
+doc = "The two standing reviewer checkouts, beside the main checkout in the project's folder (decision 78)."
+added_in = "v0.1.0"
+
+[key."reviewer_home"]
+file = "local"
+type = "path"
+labels = ["your value"]
+doc = "The one Codex reviewer home and login, in the kit home's state/ (decisions 74, 80). Bootstrap writes it."
+added_in = "v0.1.0"
+
+[key."reviewer_python"]
+file = "local"
+type = "path"
+default = ""
+labels = ["your value"]
+doc = "The Python the reviewer's commands run: its folder goes first on PATH in Codex's elevated sandbox, which cannot run a Python under your profile (M118). Empty leaves PATH as it is. Bootstrap writes it."
+added_in = "v0.1.0"

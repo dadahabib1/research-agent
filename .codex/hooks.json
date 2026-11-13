@@ -1,0 +1,26 @@
+{
+ "hooks": {
+  "PreToolUse": [
+   {
+    "hooks": [
+     {
+      "type": "command",
+      "command": "python -I .agents/kit/hooks/guard.py pre",
+      "timeout": 30
+     }
+    ]
+   }
+  ],
+  "PostToolUse": [
+   {
+    "hooks": [
+     {
+      "type": "command",
+      "command": "python -I .agents/kit/hooks/guard.py post",
+      "timeout": 30
+     }
+    ]
+   }
+  ]
+ }
+}

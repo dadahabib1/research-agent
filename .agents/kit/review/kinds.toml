@@ -1,0 +1,77 @@
+# The kinds of change (design docs/plans/2026-11-08-review-test-design.md section 2.1; contract C7 section 6).
+# The review script (.agents/kit/bin/review.py) reads each changed path's kinds from this file, from the path alone,
+# never from a pull request's title or an author's label, and writes the list into the reviewer's prompt and the
+# review record; the reviewer applies the review rules' checks by each file's kinds (kit-standard.md).
+# Kit-owned: kit updates change this file.
+#
+# A path takes every kind one of whose globs matches it: a kit script can be pure logic, drive git and be a control
+# path at once. A path no kind matches is listed as "unclassified", never dropped. `paths` are agent-kit's own (the
+# design's table), `project` the same kind's paths in an installed project; both are read. The core files' kind
+# takes its paths from the test map's `core` list (tests/map.toml, design 2.4), not from a copy here. Globs as the
+# test map's: * within one folder, ** across folders, from the checkout root.
+format = "review-kinds"
+version = 1
+
+[[kind]]
+n = 1
+name = "Other shared docs"
+paths = ["docs/plans/**", "docs/history/**", "research/**"]
+project = ["docs/**"]
+
+[[kind]]
+n = 2
+name = "Docs the two docs tests read"
+paths = ["CONTEXT.md", "DECISIONS.md", "KIT-SHAPE.md", "GLOSSARY.md", "BUILD-PLAN.md", "docs/reference/**",
+         "docs/guide/**", "docs/contracts/**"]
+project = []
+
+[[kind]]
+n = 3
+name = "Pure logic in a script"
+paths = ["template/.agents/kit/bin/*.py", "tools/*.py"]
+project = [".agents/kit/bin/*.py"]
+
+[[kind]]
+n = 4
+name = "A script driving git, Claude, Codex or files"
+paths = ["template/.agents/kit/bin/*.py", "tools/setup.py", "tools/install_into.py"]
+project = [".agents/kit/bin/*.py"]
+
+[[kind]]
+n = 5
+name = "A core file"
+paths = []
+project = []
+core = true
+
+[[kind]]
+n = 6
+name = "A step the model decides"
+paths = ["template/.agents/skills/**", "template/.claude/skills/**", "template/AGENTS.md",
+         "template/.agents/kit/review/triager.md", "template/.agents/kit/templates/brief.md",
+         "docs/review/stopgap-prompt.md"]
+project = [".agents/skills/**", ".claude/skills/**", "AGENTS.md", ".agents/kit/review/triager.md"]
+
+# The test map and this file join the table's control paths: the review reads both (design 2.3: "the reviewer
+# checks the PR's map changes like any other control file").
+[[kind]]
+n = 7
+name = "The guard or a control path"
+paths = ["template/.agents/kit/hooks/guard.py", "template/.agents/kit/settings-entries.json",
+         "template/.agents/kit/bin/merge.py", "template/.agents/kit/bin/review.py", "template/.agents/kit/bin/launch.py",
+         "template/.agents/kit/review/kinds.toml", "tests/map.toml"]
+project = [".agents/kit/hooks/guard.py", ".agents/kit/settings-entries.json", ".agents/kit/bin/merge.py",
+           ".agents/kit/bin/review.py", ".agents/kit/bin/launch.py", ".agents/kit/review/kinds.toml", "tests/map.toml"]
+
+[[kind]]
+n = 8
+name = "Tests only"
+paths = ["tests/**", "template/.agents/kit/tests/**"]
+project = ["tests/**", ".agents/kit/tests/**"]
+
+# Not a path's kind: a pull request whose files have more than one kind takes this row as well.
+[[kind]]
+n = 9
+name = "Several kinds"
+paths = []
+project = []

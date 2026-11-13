@@ -1,0 +1,69 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "title": "agent-kit review findings (contract C7 section 6; also KIT_REVIEW_OUT's shape)",
+ "type": "object",
+ "additionalProperties": false,
+ "required": ["complete", "remaining", "findings", "tests", "not_run", "cold_read"],
+ "properties": {
+  "complete": {"type": "boolean"},
+  "remaining": {"type": "array", "items": {"type": "string"},
+                "description": "What is left to review when complete is false; empty when complete"},
+  "findings": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["id", "severity", "file", "line", "title", "what", "why", "real_use", "fix", "real_data_count"],
+    "properties": {
+     "id": {"type": "string", "pattern": "^F[1-9][0-9]*$"},
+     "severity": {"type": "string", "enum": ["blocker", "fix", "note"]},
+     "file": {"type": "string"},
+     "line": {"type": ["integer", "null"],
+              "description": "The line in the candidate; null only when file is a path the change deleted or should have added, and then what says which"},
+     "title": {"type": "string"},
+     "what": {"type": "string"},
+     "why": {"type": "string"},
+     "real_use": {"type": "string"},
+     "fix": {"type": "string"},
+     "real_data_count": {"type": ["integer", "null"]}
+    }
+   }
+  },
+  "tests": {
+   "type": "array",
+   "description": "The commands you ran in the test copy; empty only when review.json's stages.clean_run is replaced and you needed to run nothing more",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["command", "summary", "exit_code", "ran_in"],
+    "properties": {
+     "command": {"type": "string"},
+     "summary": {"type": "string"},
+     "exit_code": {"type": "integer"},
+     "ran_in": {"type": "string"}
+    }
+   }
+  },
+  "not_run": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["command", "why"],
+    "properties": {"command": {"type": "string"}, "why": {"type": "string"}}
+   }
+  },
+  "cold_read": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["guess", "answer"],
+    "properties": {
+     "guess": {"type": "string"},
+     "answer": {"type": "string", "enum": ["answered", "partly", "not_answered"]}
+    }
+   }
+  }
+ }
+}

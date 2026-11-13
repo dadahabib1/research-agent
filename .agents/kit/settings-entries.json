@@ -1,0 +1,502 @@
+{
+ "format": "settings-entries",
+ "version": 1,
+ "comment": "The kit's entries in .claude/settings.json and .codex/hooks.json (C2 section 4, C5 sections 1 and 4). The install appends each value at its pointer; updates find it by name and old value.",
+ "entries": [
+  {
+   "name": "guard-pre",
+   "path": ".claude/settings.json",
+   "pointer": "/hooks/PreToolUse",
+   "value": {
+    "matcher": "*",
+    "hooks": [
+     {
+      "type": "command",
+      "command": "python",
+      "args": [
+       "-I",
+       "${CLAUDE_PROJECT_DIR}/.agents/kit/hooks/guard.py",
+       "pre"
+      ],
+      "timeout": 30,
+      "onFailure": "block"
+     }
+    ]
+   }
+  },
+  {
+   "name": "guard-prompt",
+   "path": ".claude/settings.json",
+   "pointer": "/hooks/UserPromptSubmit",
+   "value": {
+    "hooks": [
+     {
+      "type": "command",
+      "command": "python",
+      "args": [
+       "-I",
+       "${CLAUDE_PROJECT_DIR}/.agents/kit/hooks/guard.py",
+       "prompt"
+      ],
+      "timeout": 30
+     }
+    ]
+   }
+  },
+  {
+   "name": "guard-stop",
+   "path": ".claude/settings.json",
+   "pointer": "/hooks/Stop",
+   "value": {
+    "hooks": [
+     {
+      "type": "command",
+      "command": "python",
+      "args": [
+       "-I",
+       "${CLAUDE_PROJECT_DIR}/.agents/kit/hooks/guard.py",
+       "stop"
+      ],
+      "timeout": 30
+     }
+    ]
+   }
+  },
+  {
+   "name": "codex-guard-pre",
+   "path": ".codex/hooks.json",
+   "pointer": "/hooks/PreToolUse",
+   "value": {
+    "hooks": [
+     {
+      "type": "command",
+      "command": "python -I .agents/kit/hooks/guard.py pre",
+      "timeout": 30
+     }
+    ]
+   }
+  },
+  {
+   "name": "codex-guard-post",
+   "path": ".codex/hooks.json",
+   "pointer": "/hooks/PostToolUse",
+   "value": {
+    "hooks": [
+     {
+      "type": "command",
+      "command": "python -I .agents/kit/hooks/guard.py post",
+      "timeout": 30
+     }
+    ]
+   }
+  },
+  {
+   "name": "deny-bash-git-push-force-exact",
+   "path": ".claude/settings.json",
+   "pointer": "/permissions/deny",
+   "value": "Bash(git push --force)"
+  },
+  {
+   "name": "deny-bash-git-push-force-args",
+   "path": ".claude/settings.json",
+   "pointer": "/permissions/deny",
+   "value": "Bash(git push --force *)"
+  },
+  {
+   "name": "deny-bash-git-push-f-exact",
+   "path": ".claude/settings.json",
+   "pointer": "/permissions/deny",
+   "value": "Bash(git push -f)"
+  },
+  {
+   "name": "deny-bash-git-push-f-args",
+   "path": ".claude/settings.json",
+   "pointer": "/permissions/deny",
+   "value": "Bash(git push -f *)"
+  },
+  {
+   "name": "deny-bash-git-push-force-with-lease-exact",
+   "path": ".claude/settings.json",
+   "pointer": "/permissions/deny",
+   "value": "Bash(git push --force-with-lease)"
+  },
+  {
+   "name": "deny-bash-git-push-force-with-lease-args",
+   "path": ".claude/settings.json",
+   "pointer": "/permissions/deny",
+   "value": "Bash(git push --force-with-lease *)"
+  },
+  {
+   "name": "deny-bash-git-reset-hard-exact",
+   "path": ".claude/settings.json",
+   "pointer": "/permissions/deny",
+   "value": "Bash(git reset --hard)"
+  },
+  {
+   "name": "deny-bash-git-reset-hard-args",
+   "path": ".claude/settings.json",
+   "pointer": "/permissions/deny",
+   "value": "Bash(git reset --hard *)"
+  },
+  {
+   "name": "deny-bash-git-branch-D-exact",
+   "path": ".claude/settings.json",
+   "pointer": "/permissions/deny",
+   "value": "Bash(git branch -D)"
+  },
+  {
+   "name": "deny-bash-git-branch-D-args",
+   "path": ".claude/settings.json",
+   "pointer": "/permissions/deny",
+   "value": "Bash(git branch -D *)"
+  },
+  {
+   "name": "deny-bash-git-branch-d-exact",
+   "path": ".claude/settings.json",
+   "pointer": "/permissions/deny",
+   "value": "Bash(git branch -d)"
+  },
+  {
+   "name": "deny-bash-git-branch-d-args",
+   "path": ".claude/settings.json",
+   "pointer": "/permissions/deny",
+   "value": "Bash(git branch -d *)"
+  },
+  {
+   "name": "deny-bash-git-branch-delete-exact",
+   "path": ".claude/settings.json",
+   "pointer": "/permissions/deny",
+   "value": "Bash(git branch --delete)"
+  },
+  {
+   "name": "deny-bash-git-branch-delete-args",
+   "path": ".claude/settings.json",
+   "pointer": "/permissions/deny",
+   "value": "Bash(git branch --delete *)"
+  },
+  {
+   "name": "deny-bash-git-rebase-exact",
+   "path": ".claude/settings.json",
+   "pointer": "/permissions/deny",
+   "value": "Bash(git rebase)"
+  },
+  {
+   "name": "deny-bash-git-rebase-args",
+   "path": ".claude/settings.json",
+   "pointer": "/permissions/deny",
+   "value": "Bash(git rebase *)"
+  },
+  {
+   "name": "deny-bash-gh-pr-merge-exact",
+   "path": ".claude/settings.json",
+   "pointer": "/permissions/deny",
+   "value": "Bash(gh pr merge)"
+  },
+  {
+   "name": "deny-bash-gh-pr-merge-args",
+   "path": ".claude/settings.json",
+   "pointer": "/permissions/deny",
+   "value": "Bash(gh pr merge *)"
+  },
+  {
+   "name": "deny-bash-gh-repo-delete-exact",
+   "path": ".claude/settings.json",
+   "pointer": "/permissions/deny",
+   "value": "Bash(gh repo delete)"
+  },
+  {
+   "name": "deny-bash-gh-repo-delete-args",
+   "path": ".claude/settings.json",
+   "pointer": "/permissions/deny",
+   "value": "Bash(gh repo delete *)"
+  },
+  {
+   "name": "deny-powershell-git-push-force-exact",
+   "path": ".claude/settings.json",
+   "pointer": "/permissions/deny",
+   "value": "PowerShell(git push --force)"
+  },
+  {
+   "name": "deny-powershell-git-push-force-args",
+   "path": ".claude/settings.json",
+   "pointer": "/permissions/deny",
+   "value": "PowerShell(git push --force *)"
+  },
+  {
+   "name": "deny-powershell-git-push-f-exact",
+   "path": ".claude/settings.json",
+   "pointer": "/permissions/deny",
+   "value": "PowerShell(git push -f)"
+  },
+  {
+   "name": "deny-powershell-git-push-f-args",
+   "path": ".claude/settings.json",
+   "pointer": "/permissions/deny",
+   "value": "PowerShell(git push -f *)"
+  },
+  {
+   "name": "deny-powershell-git-push-force-with-lease-exact",
+   "path": ".claude/settings.json",
+   "pointer": "/permissions/deny",
+   "value": "PowerShell(git push --force-with-lease)"
+  },
+  {
+   "name": "deny-powershell-git-push-force-with-lease-args",
+   "path": ".claude/settings.json",
+   "pointer": "/permissions/deny",
+   "value": "PowerShell(git push --force-with-lease *)"
+  },
+  {
+   "name": "deny-powershell-git-reset-hard-exact",
+   "path": ".claude/settings.json",
+   "pointer": "/permissions/deny",
+   "value": "PowerShell(git reset --hard)"
+  },
+  {
+   "name": "deny-powershell-git-reset-hard-args",
+   "path": ".claude/settings.json",
+   "pointer": "/permissions/deny",
+   "value": "PowerShell(git reset --hard *)"
+  },
+  {
+   "name": "deny-powershell-git-branch-D-exact",
+   "path": ".claude/settings.json",
+   "pointer": "/permissions/deny",
+   "value": "PowerShell(git branch -D)"
+  },
+  {
+   "name": "deny-powershell-git-branch-D-args",
+   "path": ".claude/settings.json",
+   "pointer": "/permissions/deny",
+   "value": "PowerShell(git branch -D *)"
+  },
+  {
+   "name": "deny-powershell-git-branch-d-exact",
+   "path": ".claude/settings.json",
+   "pointer": "/permissions/deny",
+   "value": "PowerShell(git branch -d)"
+  },
+  {
+   "name": "deny-powershell-git-branch-d-args",
+   "path": ".claude/settings.json",
+   "pointer": "/permissions/deny",
+   "value": "PowerShell(git branch -d *)"
+  },
+  {
+   "name": "deny-powershell-git-branch-delete-exact",
+   "path": ".claude/settings.json",
+   "pointer": "/permissions/deny",
+   "value": "PowerShell(git branch --delete)"
+  },
+  {
+   "name": "deny-powershell-git-branch-delete-args",
+   "path": ".claude/settings.json",
+   "pointer": "/permissions/deny",
+   "value": "PowerShell(git branch --delete *)"
+  },
+  {
+   "name": "deny-powershell-git-rebase-exact",
+   "path": ".claude/settings.json",
+   "pointer": "/permissions/deny",
+   "value": "PowerShell(git rebase)"
+  },
+  {
+   "name": "deny-powershell-git-rebase-args",
+   "path": ".claude/settings.json",
+   "pointer": "/permissions/deny",
+   "value": "PowerShell(git rebase *)"
+  },
+  {
+   "name": "deny-powershell-gh-pr-merge-exact",
+   "path": ".claude/settings.json",
+   "pointer": "/permissions/deny",
+   "value": "PowerShell(gh pr merge)"
+  },
+  {
+   "name": "deny-powershell-gh-pr-merge-args",
+   "path": ".claude/settings.json",
+   "pointer": "/permissions/deny",
+   "value": "PowerShell(gh pr merge *)"
+  },
+  {
+   "name": "deny-powershell-gh-repo-delete-exact",
+   "path": ".claude/settings.json",
+   "pointer": "/permissions/deny",
+   "value": "PowerShell(gh repo delete)"
+  },
+  {
+   "name": "deny-powershell-gh-repo-delete-args",
+   "path": ".claude/settings.json",
+   "pointer": "/permissions/deny",
+   "value": "PowerShell(gh repo delete *)"
+  },
+  {
+   "name": "deny-bash-merge-py-yours-exact",
+   "path": ".claude/settings.json",
+   "pointer": "/permissions/deny",
+   "value": "Bash(python -I .agents/kit/bin/merge.py yours)"
+  },
+  {
+   "name": "deny-bash-merge-py-yours-args",
+   "path": ".claude/settings.json",
+   "pointer": "/permissions/deny",
+   "value": "Bash(python -I .agents/kit/bin/merge.py yours *)"
+  },
+  {
+   "name": "deny-bash-merge-py-resume-exact",
+   "path": ".claude/settings.json",
+   "pointer": "/permissions/deny",
+   "value": "Bash(python -I .agents/kit/bin/merge.py resume)"
+  },
+  {
+   "name": "deny-bash-merge-py-resume-args",
+   "path": ".claude/settings.json",
+   "pointer": "/permissions/deny",
+   "value": "Bash(python -I .agents/kit/bin/merge.py resume *)"
+  },
+  {
+   "name": "deny-bash-kit-merge-exact",
+   "path": ".claude/settings.json",
+   "pointer": "/permissions/deny",
+   "value": "Bash(kit merge)"
+  },
+  {
+   "name": "deny-bash-kit-merge-args",
+   "path": ".claude/settings.json",
+   "pointer": "/permissions/deny",
+   "value": "Bash(kit merge *)"
+  },
+  {
+   "name": "deny-powershell-merge-py-yours-exact",
+   "path": ".claude/settings.json",
+   "pointer": "/permissions/deny",
+   "value": "PowerShell(python -I .agents/kit/bin/merge.py yours)"
+  },
+  {
+   "name": "deny-powershell-merge-py-yours-args",
+   "path": ".claude/settings.json",
+   "pointer": "/permissions/deny",
+   "value": "PowerShell(python -I .agents/kit/bin/merge.py yours *)"
+  },
+  {
+   "name": "deny-powershell-merge-py-resume-exact",
+   "path": ".claude/settings.json",
+   "pointer": "/permissions/deny",
+   "value": "PowerShell(python -I .agents/kit/bin/merge.py resume)"
+  },
+  {
+   "name": "deny-powershell-merge-py-resume-args",
+   "path": ".claude/settings.json",
+   "pointer": "/permissions/deny",
+   "value": "PowerShell(python -I .agents/kit/bin/merge.py resume *)"
+  },
+  {
+   "name": "deny-powershell-kit-merge-exact",
+   "path": ".claude/settings.json",
+   "pointer": "/permissions/deny",
+   "value": "PowerShell(kit merge)"
+  },
+  {
+   "name": "deny-powershell-kit-merge-args",
+   "path": ".claude/settings.json",
+   "pointer": "/permissions/deny",
+   "value": "PowerShell(kit merge *)"
+  },
+  {
+   "name": "allow-merge-auto-bash-exact",
+   "path": ".claude/settings.json",
+   "pointer": "/permissions/allow",
+   "value": "Bash(python -I .agents/kit/bin/merge.py auto)"
+  },
+  {
+   "name": "allow-merge-auto-bash-args",
+   "path": ".claude/settings.json",
+   "pointer": "/permissions/allow",
+   "value": "Bash(python -I .agents/kit/bin/merge.py auto *)"
+  },
+  {
+   "name": "allow-merge-auto-powershell-exact",
+   "path": ".claude/settings.json",
+   "pointer": "/permissions/allow",
+   "value": "PowerShell(python -I .agents/kit/bin/merge.py auto)"
+  },
+  {
+   "name": "allow-merge-auto-powershell-args",
+   "path": ".claude/settings.json",
+   "pointer": "/permissions/allow",
+   "value": "PowerShell(python -I .agents/kit/bin/merge.py auto *)"
+  },
+  {
+   "name": "allow-merge-check-bash-exact",
+   "path": ".claude/settings.json",
+   "pointer": "/permissions/allow",
+   "value": "Bash(python -I .agents/kit/bin/merge.py check)"
+  },
+  {
+   "name": "allow-merge-check-bash-args",
+   "path": ".claude/settings.json",
+   "pointer": "/permissions/allow",
+   "value": "Bash(python -I .agents/kit/bin/merge.py check *)"
+  },
+  {
+   "name": "allow-merge-check-powershell-exact",
+   "path": ".claude/settings.json",
+   "pointer": "/permissions/allow",
+   "value": "PowerShell(python -I .agents/kit/bin/merge.py check)"
+  },
+  {
+   "name": "allow-merge-check-powershell-args",
+   "path": ".claude/settings.json",
+   "pointer": "/permissions/allow",
+   "value": "PowerShell(python -I .agents/kit/bin/merge.py check *)"
+  },
+  {
+   "name": "allow-merge-status-bash-exact",
+   "path": ".claude/settings.json",
+   "pointer": "/permissions/allow",
+   "value": "Bash(python -I .agents/kit/bin/merge.py status)"
+  },
+  {
+   "name": "allow-merge-status-bash-args",
+   "path": ".claude/settings.json",
+   "pointer": "/permissions/allow",
+   "value": "Bash(python -I .agents/kit/bin/merge.py status *)"
+  },
+  {
+   "name": "allow-merge-status-powershell-exact",
+   "path": ".claude/settings.json",
+   "pointer": "/permissions/allow",
+   "value": "PowerShell(python -I .agents/kit/bin/merge.py status)"
+  },
+  {
+   "name": "allow-merge-status-powershell-args",
+   "path": ".claude/settings.json",
+   "pointer": "/permissions/allow",
+   "value": "PowerShell(python -I .agents/kit/bin/merge.py status *)"
+  },
+  {
+   "name": "allow-merge-reconcile-bash-exact",
+   "path": ".claude/settings.json",
+   "pointer": "/permissions/allow",
+   "value": "Bash(python -I .agents/kit/bin/merge.py reconcile)"
+  },
+  {
+   "name": "allow-merge-reconcile-bash-args",
+   "path": ".claude/settings.json",
+   "pointer": "/permissions/allow",
+   "value": "Bash(python -I .agents/kit/bin/merge.py reconcile *)"
+  },
+  {
+   "name": "allow-merge-reconcile-powershell-exact",
+   "path": ".claude/settings.json",
+   "pointer": "/permissions/allow",
+   "value": "PowerShell(python -I .agents/kit/bin/merge.py reconcile)"
+  },
+  {
+   "name": "allow-merge-reconcile-powershell-args",
+   "path": ".claude/settings.json",
+   "pointer": "/permissions/allow",
+   "value": "PowerShell(python -I .agents/kit/bin/merge.py reconcile *)"
+  }
+ ]
+}

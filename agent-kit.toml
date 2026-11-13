@@ -1,0 +1,99 @@
+# agent-kit.toml: every setting for this project, in one place (committed).
+# Changing a value here is a PR you merge. Machine-only values live in agent-kit.local.toml.
+# Labels say how each default was chosen: measured, ran, reported, replayed, judgment, your value.
+
+[project]
+# The project's name; also the prefix of every session name (decision 52). Bootstrap offers the folder name. [your value]
+name = "research-agent"
+# What the orchestrator may never decide alone (decision 58): changes touching these go to you. Bootstrap asks. [judgment]
+high_stakes = []
+
+[sessions]
+# Model the orchestrator starts with. [ran]
+orchestrator.model = "claude-opus-5-5"
+# Effort the orchestrator starts with. [ran]
+orchestrator.effort = "high"
+# Model a builder starts with. [ran]
+builder.model = "claude-opus-5-5"
+# Effort a builder starts with; a brief may raise it for one ticket, with the reason, and "max" only with your OK (decision 63). [ran]
+builder.effort = "xhigh"
+# Model of the triager, the one call after each review round that gives each finding a verdict (decisions 33, 34, 73). [judgment]
+triager.model = "claude-opus-5-5"
+# Effort of the triager. [judgment]
+triager.effort = "high"
+# Model of the read-only helper (decisions 27, 60). [judgment]
+reader.model = "claude-opus-5-5"
+# Effort of the read-only helper. [judgment]
+reader.effort = "high"
+# How many builders run at once, below the memory floor (decision 46); an escalated builder waiting idle does not count (decision 123). [ran]
+max_builders = 1
+# Hours an escalated builder waits idle, its cache kept warm, before it hands off; 0 hands off at once (decision 123). [your value]
+escalation_wait_hours = 8.0
+
+[reviewer]
+# Which harness reviews (decision 25). [your value]
+engine = "codex"
+# Reviewer model: one session, no helpers (decision 77). Must be a model of the engine (rule V5). [measured]
+model = "gpt-6-astra"
+# Reviewer effort (decision 77). [measured]
+effort = "high"
+# Used once, on a capacity error only (decision 77). Must be a model of the engine (rule V5). [your value]
+fallback.model = "gpt-6.1-sol"
+# Effort of the fallback reviewer. [your value]
+fallback.effort = "high"
+# Fix rounds before the ticket goes to you; the next round is yours (decision 75). [measured]
+max_fix_rounds = 3
+
+[tickets]
+# A ticket on the same files builds on the one before (decisions 45, 67). [measured]
+stacking = true
+# The orchestrator merges ticket PRs once earned. Off until you turn it on, after the adoption tests and the behaviour suite pass (decisions 70, 87; C8 section 2). [your value]
+auto_merge = false
+# Clean ticket merges by you before the orchestrator may merge ticket PRs itself (decision 70). [your value]
+earn_after = 3
+# Escalations in a row that hand self-merge back to you; a revert or a red main also does (decision 70). [your value]
+hand_back_after_escalations = 3
+# Paths whose PRs are always yours, added to the kit's fixed control paths, which cannot be removed (decisions 70, 83, 96). [your value]
+your_paths = ["docs/spec/**", "docs/adr/**", "docs/agents/**"]
+
+[merge]
+# The clean run, one command as an argv list: the offline suite plus the free live tests, run on every merge result and on main after it; empty refuses every merge (decision 66; C8 section 7). [your value]
+clean_run = ["cmd", "/c", "uv run --script plugins/research-agent/tools/tests/run.py && uv run --script plugins/research-agent/kit/tests/run.py && uv run --script plugins/research-agent/servers/fetch_raw/tests/run.py"]
+# Minutes a clean run may take; a run that does not finish is red and its process tree is killed (C8 section 7). [your value]
+run_timeout_minutes = 30
+# The paid suite, an argv list run once after a merge that touches merge.paid_paths, after the merge lock is released (decisions 66, 113). [your value]
+paid_suite = []
+# Paths whose change makes the paid suite due after the merge: data, research or pipeline code (decision 66). [your value]
+paid_paths = []
+
+[context]
+# Percent of the context window at which the orchestrator is warned (decision 50). [judgment, replayed]
+orchestrator.warn = 40
+# Percent at which the orchestrator hands off to a fresh session (decision 50). [judgment, replayed]
+orchestrator.handoff = 45
+# Percent at which a builder is warned. [judgment, replayed]
+builder.warn = 50
+# Percent at which a builder hands off. [judgment, replayed]
+builder.handoff = 55
+# Percent at which the reviewer is warned. [judgment, replayed]
+reviewer.warn = 55
+# Percent at which the reviewer hands off. [judgment, replayed]
+reviewer.handoff = 70
+# Merges after which the orchestrator rotates to a fresh session (decision 48). [ran]
+rotate_orchestrator_after_merges = 3
+
+[usage]
+# Percent of your plan's usage limit at which you are warned (decisions 49, 53). [your value]
+warn_at = 80
+# Percent from which newly launched sessions run one effort level lower (decision 53). [your value]
+lower_effort_at = 80
+# Percent from which no new session starts; a replacement still can (decision 49). [your value]
+no_new_sessions_at = 95
+
+[probe]
+# Where the first impact probe keeps its real-data sample, for later probes to reuse (decision 60). [judgment]
+sample = "probe/sample/"
+
+[modules]
+# Modules this project uses; each keeps its own settings in its own folder (decision 54). [judgment]
+enabled = []

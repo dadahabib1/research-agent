@@ -1,0 +1,7 @@
+# The agent-kit release this project's kit files came from. Written by the install and kit update; never edit
+# it by hand.
+format = "kit.lock"
+version = 1
+kit_version = "v0.1.2"
+commit = "87edb7065b1398f179cc70f404a2689da761835a"
+written = "2026-11-13T18:36:56Z"

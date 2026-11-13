@@ -1,1 +1,11 @@
 __pycache__/
+# agent-kit:begin
+/agent-kit.local.toml
+/.copier-answers.yml
+/.env
+/.coordination/
+/codex/
+/codex-b/
+/.claude/worktrees/
+__pycache__/
+# agent-kit:end

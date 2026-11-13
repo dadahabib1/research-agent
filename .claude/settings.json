@@ -1,0 +1,128 @@
+{
+ "hooks": {
+  "PreToolUse": [
+   {
+    "matcher": "*",
+    "hooks": [
+     {
+      "type": "command",
+      "command": "python",
+      "args": [
+       "-I",
+       "${CLAUDE_PROJECT_DIR}/.agents/kit/hooks/guard.py",
+       "pre"
+      ],
+      "timeout": 30,
+      "onFailure": "block"
+     }
+    ]
+   }
+  ],
+  "UserPromptSubmit": [
+   {
+    "hooks": [
+     {
+      "type": "command",
+      "command": "python",
+      "args": [
+       "-I",
+       "${CLAUDE_PROJECT_DIR}/.agents/kit/hooks/guard.py",
+       "prompt"
+      ],
+      "timeout": 30
+     }
+    ]
+   }
+  ],
+  "Stop": [
+   {
+    "hooks": [
+     {
+      "type": "command",
+      "command": "python",
+      "args": [
+       "-I",
+       "${CLAUDE_PROJECT_DIR}/.agents/kit/hooks/guard.py",
+       "stop"
+      ],
+      "timeout": 30
+     }
+    ]
+   }
+  ]
+ },
+ "permissions": {
+  "deny": [
+   "Bash(git push --force)",
+   "Bash(git push --force *)",
+   "Bash(git push -f)",
+   "Bash(git push -f *)",
+   "Bash(git push --force-with-lease)",
+   "Bash(git push --force-with-lease *)",
+   "Bash(git reset --hard)",
+   "Bash(git reset --hard *)",
+   "Bash(git branch -D)",
+   "Bash(git branch -D *)",
+   "Bash(git branch -d)",
+   "Bash(git branch -d *)",
+   "Bash(git branch --delete)",
+   "Bash(git branch --delete *)",
+   "Bash(git rebase)",
+   "Bash(git rebase *)",
+   "Bash(gh pr merge)",
+   "Bash(gh pr merge *)",
+   "Bash(gh repo delete)",
+   "Bash(gh repo delete *)",
+   "PowerShell(git push --force)",
+   "PowerShell(git push --force *)",
+   "PowerShell(git push -f)",
+   "PowerShell(git push -f *)",
+   "PowerShell(git push --force-with-lease)",
+   "PowerShell(git push --force-with-lease *)",
+   "PowerShell(git reset --hard)",
+   "PowerShell(git reset --hard *)",
+   "PowerShell(git branch -D)",
+   "PowerShell(git branch -D *)",
+   "PowerShell(git branch -d)",
+   "PowerShell(git branch -d *)",
+   "PowerShell(git branch --delete)",
+   "PowerShell(git branch --delete *)",
+   "PowerShell(git rebase)",
+   "PowerShell(git rebase *)",
+   "PowerShell(gh pr merge)",
+   "PowerShell(gh pr merge *)",
+   "PowerShell(gh repo delete)",
+   "PowerShell(gh repo delete *)",
+   "Bash(python -I .agents/kit/bin/merge.py yours)",
+   "Bash(python -I .agents/kit/bin/merge.py yours *)",
+   "Bash(python -I .agents/kit/bin/merge.py resume)",
+   "Bash(python -I .agents/kit/bin/merge.py resume *)",
+   "Bash(kit merge)",
+   "Bash(kit merge *)",
+   "PowerShell(python -I .agents/kit/bin/merge.py yours)",
+   "PowerShell(python -I .agents/kit/bin/merge.py yours *)",
+   "PowerShell(python -I .agents/kit/bin/merge.py resume)",
+   "PowerShell(python -I .agents/kit/bin/merge.py resume *)",
+   "PowerShell(kit merge)",
+   "PowerShell(kit merge *)"
+  ],
+  "allow": [
+   "Bash(python -I .agents/kit/bin/merge.py auto)",
+   "Bash(python -I .agents/kit/bin/merge.py auto *)",
+   "PowerShell(python -I .agents/kit/bin/merge.py auto)",
+   "PowerShell(python -I .agents/kit/bin/merge.py auto *)",
+   "Bash(python -I .agents/kit/bin/merge.py check)",
+   "Bash(python -I .agents/kit/bin/merge.py check *)",
+   "PowerShell(python -I .agents/kit/bin/merge.py check)",
+   "PowerShell(python -I .agents/kit/bin/merge.py check *)",
+   "Bash(python -I .agents/kit/bin/merge.py status)",
+   "Bash(python -I .agents/kit/bin/merge.py status *)",
+   "PowerShell(python -I .agents/kit/bin/merge.py status)",
+   "PowerShell(python -I .agents/kit/bin/merge.py status *)",
+   "Bash(python -I .agents/kit/bin/merge.py reconcile)",
+   "Bash(python -I .agents/kit/bin/merge.py reconcile *)",
+   "PowerShell(python -I .agents/kit/bin/merge.py reconcile)",
+   "PowerShell(python -I .agents/kit/bin/merge.py reconcile *)"
+  ]
+ }
+}
